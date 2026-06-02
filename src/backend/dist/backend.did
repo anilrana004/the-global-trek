@@ -1,0 +1,142 @@
+type Yatra = 
+ record {
+   bestTime: text;
+   description: text;
+   difficulty: text;
+   duration: text;
+   id: text;
+   imageQuery: text;
+   name: text;
+   price: text;
+   region: text;
+   startEnd: text;
+ };
+type Trek = 
+ record {
+   ageGroup: text;
+   bestTime: text;
+   description: text;
+   difficulty: text;
+   distance: text;
+   duration: text;
+   groupSize: text;
+   id: text;
+   imageQuery: text;
+   maxAltitude: text;
+   name: text;
+   nearestAirport: text;
+   nearestRailhead: text;
+   price: text;
+   region: text;
+   startPoint: text;
+ };
+type Review = 
+ record {
+   helpful: nat;
+   id: text;
+   rating: nat;
+   reviewText: text;
+   reviewerCity: text;
+   reviewerName: text;
+   trekDate: text;
+   trekId: text;
+   userId: text;
+   verified: bool;
+ };
+type Participant = 
+ record {
+   dateOfBirth: text;
+   email: text;
+   emergencyContact: text;
+   firstName: text;
+   gender: text;
+   govtId: text;
+   lastName: text;
+   medicalConditions: text;
+   mobile: text;
+ };
+type Package = 
+ record {
+   category: text;
+   description: text;
+   duration: text;
+   highlights: vec text;
+   id: text;
+   images: vec text;
+   inclusions: vec text;
+   name: text;
+   price: nat;
+ };
+type GearItem = 
+ record {
+   brand: text;
+   category: text;
+   deposit: nat;
+   id: text;
+   name: text;
+   pricePerDay: nat;
+   spec: text;
+ };
+type BookingInquiry = 
+ record {
+   email: text;
+   groupSize: text;
+   hearAboutUs: text;
+   name: text;
+   phone: text;
+   preferredDates: text;
+   specialRequirements: text;
+   trekInterest: text;
+ };
+type Booking = 
+ record {
+   addOns: vec text;
+   batchId: text;
+   createdAt: int;
+   id: text;
+   participants: vec Participant;
+   status: text;
+   totalAmount: nat;
+   trekId: text;
+   userId: text;
+ };
+type BlogPost = 
+ record {
+   category: text;
+   date: text;
+   excerpt: text;
+   id: text;
+   imageQuery: text;
+   title: text;
+ };
+type Batch = 
+ record {
+   basePrice: nat;
+   batchType: text;
+   bookedCount: nat;
+   endDate: text;
+   id: text;
+   maxCapacity: nat;
+   startDate: text;
+   trekId: text;
+ };
+service : {
+  createBooking: (booking: Booking) -> (text);
+  createReview: (review: Review) -> (text);
+  getBooking: (bookingId: text) -> (opt Booking) query;
+  getPackageById: (packageId: text) -> (opt Package) query;
+  getTrek: (id: text) -> (opt Trek) query;
+  getYatra: (yatraId: text) -> (opt Yatra) query;
+  listAllReviews: () -> (vec Review) query;
+  listBatches: (trekId: text) -> (vec Batch) query;
+  listBlogPosts: () -> (vec BlogPost) query;
+  listGearItems: () -> (vec GearItem) query;
+  listPackages: () -> (vec Package) query;
+  listReviews: (trekId: text) -> (vec Review) query;
+  listTreks: () -> (vec Trek) query;
+  listUserBookings: (userId: text) -> (vec Booking) query;
+  listYatras: () -> (vec Yatra) query;
+  searchTreks: (searchTerm: text) -> (vec Trek) query;
+  submitBookingInquiry: (inquiry: BookingInquiry) -> (text);
+  updateBatchAvailability: (batchId: text, seatsBooked: nat) -> (bool);
+}

@@ -1,0 +1,23 @@
+{
+  "overview": "Global Trek — India's premier Himalayan trekking and pilgrimage platform with 15 treks, 4 yatras, full booking system, and world-class SEO.",
+  "features": [
+    "15 Himalayan trek pages with full itineraries, altitude charts, and booking",
+    "4 sacred yatra pages (Kedarnath, Char Dham, Do Dham, Panch Kedar)",
+    "Complete technical SEO with JSON-LD schemas, geo meta tags, and Open Graph for every page",
+    "XML sitemap system (7 sitemaps including image and trek sitemaps)",
+    "9 city landing pages for Delhi, Mumbai, Bangalore, Dehradun, and international visitors",
+    "Trek detail pages with AMS altitude context, visual difficulty bars, and sticky booking sidebar",
+    "8-channel contact hub with WhatsApp, callback, and video consultation",
+    "Floating contact widgets on every page (WhatsApp, callback, live chat)"
+  ],
+  "category": "travel",
+  "tags": [
+    "himalayan-trekking",
+    "travel",
+    "india",
+    "seo",
+    "yatra",
+    "booking"
+  ],
+  "last_updated": "2026-06-02T03:49:46.255Z"
+}

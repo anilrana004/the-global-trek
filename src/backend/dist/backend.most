@@ -1,0 +1,169 @@
+// Version: 1.0.0
+type Batch__564540074 =
+  {
+    basePrice : Nat;
+    batchType : Text;
+    bookedCount : Nat;
+    endDate : Text;
+    id : Text;
+    maxCapacity : Nat;
+    startDate : Text;
+    trekId : Text
+  };
+type BlogPost__543622485 =
+  {
+    category : Text;
+    date : Text;
+    excerpt : Text;
+    id : Text;
+    imageQuery : Text;
+    title : Text
+  };
+type BookingInquiry__450314208 =
+  {
+    email : Text;
+    groupSize : Text;
+    hearAboutUs : Text;
+    name : Text;
+    phone : Text;
+    preferredDates : Text;
+    specialRequirements : Text;
+    trekInterest : Text
+  };
+type Booking__519012722 =
+  {
+    addOns : [Text];
+    batchId : Text;
+    createdAt : Int;
+    id : Text;
+    participants : [Participant__24172182];
+    status : Text;
+    totalAmount : Nat;
+    trekId : Text;
+    userId : Text
+  };
+type GearItem__490498561 =
+  {
+    brand : Text;
+    category : Text;
+    deposit : Nat;
+    id : Text;
+    name : Text;
+    pricePerDay : Nat;
+    spec : Text
+  };
+type Nat__1040412405 = Nat__920180692;
+type Nat__920180692 = Nat;
+type Package__226567178 =
+  {
+    category : Text;
+    description : Text;
+    duration : Text;
+    highlights : [Text];
+    id : Text;
+    images : [Text];
+    inclusions : [Text];
+    name : Text;
+    price : Nat
+  };
+type Participant__24172182 =
+  {
+    dateOfBirth : Text;
+    email : Text;
+    emergencyContact : Text;
+    firstName : Text;
+    gender : Text;
+    govtId : Text;
+    lastName : Text;
+    medicalConditions : Text;
+    mobile : Text
+  };
+type Review__422344017 =
+  {
+    helpful : Nat;
+    id : Text;
+    rating : Nat;
+    reviewText : Text;
+    reviewerCity : Text;
+    reviewerName : Text;
+    trekDate : Text;
+    trekId : Text;
+    userId : Text;
+    verified : Bool
+  };
+type Trek__857611341 =
+  {
+    ageGroup : Text;
+    bestTime : Text;
+    description : Text;
+    difficulty : Text;
+    distance : Text;
+    duration : Text;
+    groupSize : Text;
+    id : Text;
+    imageQuery : Text;
+    maxAltitude : Text;
+    name : Text;
+    nearestAirport : Text;
+    nearestRailhead : Text;
+    price : Text;
+    region : Text;
+    startPoint : Text
+  };
+actor {
+  stable batchSeed : [Batch__564540074];
+  stable batches :
+    {
+      var blockIndex : Nat__1040412405;
+      var blocks : [var [var ?Batch__564540074]];
+      var elementIndex : Nat__1040412405
+    };
+  stable blogPosts :
+    {
+      var blockIndex : Nat__1040412405;
+      var blocks : [var [var ?BlogPost__543622485]];
+      var elementIndex : Nat__1040412405
+    };
+  stable blogSeed : [BlogPost__543622485];
+  stable bookings :
+    {
+      var blockIndex : Nat__1040412405;
+      var blocks : [var [var ?Booking__519012722]];
+      var elementIndex : Nat__1040412405
+    };
+  stable gearItems :
+    {
+      var blockIndex : Nat__1040412405;
+      var blocks : [var [var ?GearItem__490498561]];
+      var elementIndex : Nat__1040412405
+    };
+  stable gearSeed : [GearItem__490498561];
+  stable inquiries :
+    {
+      var blockIndex : Nat__1040412405;
+      var blocks : [var [var ?BookingInquiry__450314208]];
+      var elementIndex : Nat__1040412405
+    };
+  stable packageSeed : [Package__226567178];
+  stable packages :
+    {
+      var blockIndex : Nat__1040412405;
+      var blocks : [var [var ?Package__226567178]];
+      var elementIndex : Nat__1040412405
+    };
+  stable reviewSeed : [Review__422344017];
+  stable reviews :
+    {
+      var blockIndex : Nat__1040412405;
+      var blocks : [var [var ?Review__422344017]];
+      var elementIndex : Nat__1040412405
+    };
+  stable state : {var nextBookingSeq : Nat};
+  stable trekSeed : [Trek__857611341];
+  stable treks :
+    {
+      var blockIndex : Nat__1040412405;
+      var blocks : [var [var ?Trek__857611341]];
+      var elementIndex : Nat__1040412405
+    }
+};
