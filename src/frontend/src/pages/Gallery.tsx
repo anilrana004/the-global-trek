@@ -1,6 +1,7 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight, Instagram, X } from "lucide-react";
 import { useMemo, useState } from "react";
+import PhotoUpload from "../components/PhotoUpload";
 
 type GalleryItem = {
   id: number;
@@ -427,7 +428,8 @@ type Category =
   | "himachal"
   | "yatras"
   | "wildlife"
-  | "landscapes";
+  | "landscapes"
+  | "community";
 
 const FILTER_LABELS: { value: Category; label: string }[] = [
   { value: "all", label: "All" },
@@ -436,11 +438,13 @@ const FILTER_LABELS: { value: Category; label: string }[] = [
   { value: "yatras", label: "Yatras" },
   { value: "wildlife", label: "Wildlife" },
   { value: "landscapes", label: "Landscapes" },
+  { value: "community", label: "Community" },
 ];
 
 export default function GalleryPage() {
   const [activeFilter, setActiveFilter] = useState<Category>("all");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [showUpload, setShowUpload] = useState(false);
 
   const filtered = useMemo(
     () =>
@@ -535,6 +539,31 @@ export default function GalleryPage() {
 
       {/* Gallery Grid */}
       <div className="max-w-7xl mx-auto px-4 py-12">
+        {/* Community Photo Upload CTA */}
+        <div className="bg-gradient-to-r from-[#1A7A4C] to-[#0f5c38] rounded-2xl p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-2xl">📸</span>
+            </div>
+            <div>
+              <h3 className="text-white font-semibold text-lg">
+                Trekked with Global Trek?
+              </h3>
+              <p className="text-white/80 text-sm">
+                Share your journey with 12,000+ fellow trekkers. Your photos
+                inspire the next adventure.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowUpload(true)}
+            data-ocid="gallery.upload_button"
+            className="bg-amber-500 hover:bg-amber-400 text-white font-semibold px-6 py-3 rounded-xl whitespace-nowrap transition-colors"
+          >
+            Upload Your Photos
+          </button>
+        </div>
         <p
           className="text-sm text-muted-foreground mb-6 text-center"
           style={{ fontFamily: "'DM Sans', sans-serif" }}
@@ -621,6 +650,39 @@ export default function GalleryPage() {
           })}
         </div>
 
+        {/* Community Spotlight */}
+        <section className="mt-16">
+          <h2
+            className="text-3xl font-bold text-foreground mb-2"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          >
+            🌄 Community Photos
+          </h2>
+          <p className="text-muted-foreground mb-8">
+            Real photos from real trekkers — unfiltered, unedited,
+            unforgettable.
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="col-span-full text-center py-12 bg-muted/40 rounded-2xl">
+              <span className="text-4xl mb-4 block">📷</span>
+              <p className="text-foreground font-medium">
+                Be the first to share your trek photos!
+              </p>
+              <p className="text-muted-foreground text-sm mt-1">
+                Photos appear here after a quick review (within 24 hours).
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowUpload(true)}
+                data-ocid="gallery.community_upload_button"
+                className="mt-4 bg-[#1A7A4C] text-white px-6 py-2 rounded-xl hover:bg-[#0f5c38] transition-colors"
+              >
+                Share Your Photos
+              </button>
+            </div>
+          </div>
+        </section>
+
         {/* Instagram CTA */}
         <div className="mt-16 text-center">
           <div className="inline-flex items-center gap-3 px-8 py-5 rounded-2xl border border-border bg-card shadow-sm">
@@ -664,6 +726,14 @@ export default function GalleryPage() {
           </div>
         </div>
       </div>
+
+      {showUpload && (
+        <PhotoUpload
+          trekSlug="community"
+          trekName="Community Gallery"
+          onClose={() => setShowUpload(false)}
+        />
+      )}
 
       {/* Lightbox Dialog */}
       <Dialog

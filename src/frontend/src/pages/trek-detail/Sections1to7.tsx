@@ -42,6 +42,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { SeatCounter } from "../../components/ui/SeatCounter";
 import type { BatchSlot, Trek } from "./types";
 import {
   altitudeAmsLevel,
@@ -1035,7 +1036,7 @@ export function BatchesAndPricing({ trek }: { trek: Trek }) {
           </thead>
           <tbody>
             {filtered.map((batch, i) => {
-              const badge = batchStatusBadge(
+              const _badge = batchStatusBadge(
                 batch.status,
                 batch.availableSeats,
               );
@@ -1059,12 +1060,11 @@ export function BatchesAndPricing({ trek }: { trek: Trek }) {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <span
-                      className="px-2 py-1 rounded-full text-xs font-bold"
-                      style={{ background: badge.bg, color: badge.color }}
-                    >
-                      {batch.status === "sold_out" ? "FULL" : badge.label}
-                    </span>
+                    <SeatCounter
+                      trekSlug={slug}
+                      batchDate={batch.startDate}
+                      variant="calendar"
+                    />
                   </td>
                   <td
                     className="px-4 py-3 font-bold"

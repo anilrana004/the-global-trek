@@ -10,6 +10,7 @@ import {
   createRouter,
 } from "@tanstack/react-router";
 import { Suspense, lazy } from "react";
+import { LanguageProvider } from "./contexts/LanguageContext";
 const TrekFromDelhiPage = lazy(() => import("@/pages/city/TrekFromDelhi"));
 const TrekFromDehradunPage = lazy(
   () => import("@/pages/city/TrekFromDehradun"),
@@ -30,6 +31,9 @@ const CharDhamForForeignersPage = lazy(
   () => import("@/pages/CharDhamForForeigners"),
 );
 
+const AvailabilityDashboardPage = lazy(
+  () => import("@/pages/AvailabilityDashboard"),
+);
 const HomePage = lazy(() => import("@/pages/Home"));
 const TreksPage = lazy(() => import("@/pages/Treks"));
 const TrekDetailPage = lazy(() => import("@/pages/TrekDetail"));
@@ -63,6 +67,9 @@ const BookingConfirmationPage = lazy(
   () => import("@/pages/booking/Confirmation"),
 );
 const NotFoundPage = lazy(() => import("@/pages/NotFound"));
+const AdminPanelPage = lazy(() => import("@/pages/AdminPanel"));
+const CertificateDownload = lazy(() => import("./pages/CertificateDownload"));
+const BlogPreview = lazy(() => import("./pages/BlogPreview"));
 
 const PageFallback = () => (
   <div className="min-h-[60vh] flex items-center justify-center">
@@ -157,6 +164,11 @@ const blogRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/blog",
   component: wrap(BlogPage),
+});
+const blogPreviewRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/blog/preview/$slug",
+  component: wrap(BlogPreview),
 });
 const blogDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -274,14 +286,31 @@ const charDhamForForeignersRoute = createRoute({
   component: wrap(CharDhamForForeignersPage),
 });
 
+const availabilityRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/availability",
+  component: wrap(AvailabilityDashboardPage),
+});
 const notFoundRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/404",
   component: wrap(NotFoundPage),
 });
+const certificateDownloadRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/certificate/$certCode",
+  component: wrap(CertificateDownload),
+});
+
+const adminRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/admin",
+  component: wrap(AdminPanelPage),
+});
 
 const routeTree = rootRoute.addChildren([
   homeRoute,
+  adminRoute,
   exploreRoute,
   treksRoute,
   treksUKRoute,
@@ -296,7 +325,9 @@ const routeTree = rootRoute.addChildren([
   galleryRoute,
   aboutRoute,
   blogRoute,
+  blogPreviewRoute,
   blogDetailRoute,
+  certificateDownloadRoute,
   contactRoute,
   loginRoute,
   registerRoute,
@@ -319,6 +350,7 @@ const routeTree = rootRoute.addChildren([
   trekFromBangaloreRoute,
   treksForForeignersRoute,
   charDhamForForeignersRoute,
+  availabilityRoute,
   notFoundRoute,
 ]);
 
@@ -340,9 +372,11 @@ const queryClient = new QueryClient({
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BookingProvider>
-        <RouterProvider router={router} />
-      </BookingProvider>
+      <LanguageProvider>
+        <BookingProvider>
+          <RouterProvider router={router} />
+        </BookingProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }

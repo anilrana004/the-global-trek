@@ -1,4 +1,4 @@
-// Version: 3.0.0
+// Version: 1.0.0
 type AddOns__393889461 =
   {
     gearBoots : Bool;
@@ -9,6 +9,25 @@ type AddOns__393889461 =
     porter : Bool;
     porterDays : Nat;
     travelInsurance : Bool
+  };
+type AdminBlogPost__252321021 =
+  {
+    author : Text;
+    category : Text;
+    content : Text;
+    createdAt : Int;
+    excerpt : Text;
+    focusKeyword : Text;
+    heroImageUrl : Text;
+    id : Nat;
+    metaDescription : Text;
+    publishAt : ?Int;
+    publishedAt : ?Int;
+    slug : Text;
+    status : BlogPostStatus__829092226;
+    tags : [Text];
+    title : Text;
+    updatedAt : Int
   };
 type BatchAvailability__308946274 =
   {
@@ -31,6 +50,7 @@ type Batch__564540074 =
     startDate : Text;
     trekId : Text
   };
+type BlogPostStatus__829092226 = {#archived; #draft; #published; #scheduled};
 type BlogPost__543622485 =
   {
     category : Text;
@@ -73,6 +93,29 @@ type Booking__519012722 =
   };
 type Data__80296667<K, V> =
   {var count : Nat__1040412405; kvs : [var ?(K, V)]};
+type FullReview__508355796 =
+  {
+    bookingEmail : Text;
+    bookingId : Text;
+    campsiteRating : Nat;
+    foodRating : Nat;
+    groupType : Text;
+    guideRating : Nat;
+    helpfulCount : Nat;
+    id : ReviewId__768921902;
+    organizationRating : Nat;
+    overallRating : Nat;
+    photoUrls : [Text];
+    reviewText : Text;
+    reviewerCity : Text;
+    reviewerName : Text;
+    safetyRating : Nat;
+    status : Text;
+    submittedAt : Int;
+    transportRating : Nat;
+    trekSlug : Text;
+    valueRating : Nat
+  };
 type GearItem__490498561 =
   {
     brand : Text;
@@ -86,40 +129,21 @@ type GearItem__490498561 =
 type Internal__41346355<K, V> =
   {children : [var ?Node__1000929467<K, V>]; data : Data__80296667<K, V>};
 type Leaf__712614010<K, V> = {data : Data__80296667<K, V>};
-type List__529703492<T> =
-  {
-    var blockIndex : Nat__1040412405;
-    var blocks : [var [var ?T]];
-    var elementIndex : Nat__1040412405
-  };
-type List__560604548<T> = List__529703492<T>;
 type Nat__1040412405 = Nat__920180692;
 type Nat__920180692 = Nat;
 type Node__1000929467<K, V> =
   {#internal : Internal__41346355<K, V>; #leaf : Leaf__712614010<K, V>};
-type OldBooking__221110599 =
+type Notification__879889657 =
   {
-    addOns : [Text];
-    batchId : Text;
+    actionUrl : Text;
+    batchDate : Text;
     createdAt : Int;
-    id : Text;
-    participants : [OldParticipant__141780686];
-    status : Text;
-    totalAmount : Nat;
-    trekId : Text;
-    userId : Text
-  };
-type OldParticipant__141780686 =
-  {
-    dateOfBirth : Text;
-    email : Text;
-    emergencyContact : Text;
-    firstName : Text;
-    gender : Text;
-    govtId : Text;
-    lastName : Text;
-    medicalConditions : Text;
-    mobile : Text
+    id : Nat;
+    isRead : Bool;
+    message : Text;
+    title : Text;
+    trekName : Text;
+    userId : Principal
   };
 type Package__226567178 =
   {
@@ -133,6 +157,7 @@ type Package__226567178 =
     name : Text;
     price : Nat
   };
+type PageViewEvent__373850296 = {timestamp : Int; trekSlug : Text};
 type ParticipantInput__844980839 =
   {
     age : Nat;
@@ -147,6 +172,7 @@ type ParticipantInput__844980839 =
     medicalConditions : Text;
     mobile : Text
   };
+type ReviewId__768921902 = Nat;
 type Review__422344017 =
   {
     helpful : Nat;
@@ -159,6 +185,34 @@ type Review__422344017 =
     trekId : Text;
     userId : Text;
     verified : Bool
+  };
+type TrekCertificate__276647924 =
+  {
+    bookingId : Nat;
+    certificateCode : Text;
+    completedDate : Text;
+    duration : Text;
+    guideName : Text;
+    id : Nat;
+    issuedAt : Int;
+    maxAltitude : Text;
+    trekName : Text;
+    trekSlug : Text;
+    userId : Principal
+  };
+type TrekPhoto__372685550 =
+  {
+    approvedAt : ?Int;
+    caption : Text;
+    dateOfTrek : Text;
+    id : Text;
+    isProfilePhoto : Bool;
+    status : Text;
+    storageUrl : Text;
+    submittedAt : Int;
+    trekSlug : Text;
+    uploaderEmail : Text;
+    uploaderName : Text
   };
 type Trek__857611341 =
   {
@@ -179,81 +233,32 @@ type Trek__857611341 =
     region : Text;
     startPoint : Text
   };
-actor ({
+type WaitlistEntry__111990395 =
+  {
+    batchDate : Text;
+    createdAt : Int;
+    email : Text;
+    id : Text;
+    name : Text;
+    phone : Text;
+    trekSlug : Text
+  };
+actor {
   stable _bookings :
     {
       var blockIndex : Nat__1040412405;
       var blocks : [var [var ?Booking__519012722]];
       var elementIndex : Nat__1040412405
     };
-  stable batchAvailabilityMap :
+  stable adminBlogMap :
     {
-      var root : Node__1000929467<Text, BatchAvailability__308946274>;
+      var root : Node__1000929467<Nat, AdminBlogPost__252321021>;
       var size : Nat__1040412405
     };
-  stable batchAvailabilitySeed : [BatchAvailability__308946274];
-  stable batchSeed : [Batch__564540074];
-  stable batches :
-    {
-      var blockIndex : Nat__1040412405;
-      var blocks : [var [var ?Batch__564540074]];
-      var elementIndex : Nat__1040412405
-    };
-  stable blogPosts :
-    {
-      var blockIndex : Nat__1040412405;
-      var blocks : [var [var ?BlogPost__543622485]];
-      var elementIndex : Nat__1040412405
-    };
-  stable blogSeed : [BlogPost__543622485];
-  in bookings : List__560604548<OldBooking__221110599>;
-  stable bookingsMap :
-    {
-      var root : Node__1000929467<Text, Booking__519012722>;
-      var size : Nat__1040412405
-    };
-  stable gearItems :
-    {
-      var blockIndex : Nat__1040412405;
-      var blocks : [var [var ?GearItem__490498561]];
-      var elementIndex : Nat__1040412405
-    };
-  stable gearSeed : [GearItem__490498561];
-  stable inquiries :
-    {
-      var blockIndex : Nat__1040412405;
-      var blocks : [var [var ?BookingInquiry__450314208]];
-      var elementIndex : Nat__1040412405
-    };
-  stable packageSeed : [Package__226567178];
-  stable packages :
-    {
-      var blockIndex : Nat__1040412405;
-      var blocks : [var [var ?Package__226567178]];
-      var elementIndex : Nat__1040412405
-    };
-  stable reviewSeed : [Review__422344017];
-  stable reviews :
-    {
-      var blockIndex : Nat__1040412405;
-      var blocks : [var [var ?Review__422344017]];
-      var elementIndex : Nat__1040412405
-    };
-  stable state : {var nextBookingSeq : Nat};
-  stable trekSeed : [Trek__857611341];
-  stable treks :
-    {
-      var blockIndex : Nat__1040412405;
-      var blocks : [var [var ?Trek__857611341]];
-      var elementIndex : Nat__1040412405
-    }
-}, {
-  stable _bookings :
-    {
-      var blockIndex : Nat__1040412405;
-      var blocks : [var [var ?Booking__519012722]];
-      var elementIndex : Nat__1040412405
-    };
+  stable adminBlogSlugMap :
+    {var root : Node__1000929467<Text, Nat>; var size : Nat__1040412405};
+  stable adminBlogState : {var nextBlogId : Nat};
+  stable adminState : {var adminPrincipals : [Text]};
   stable batchAvailabilityMap :
     {
       var root : Node__1000929467<Text, BatchAvailability__308946274>;
@@ -279,6 +284,14 @@ actor ({
       var root : Node__1000929467<Text, Booking__519012722>;
       var size : Nat__1040412405
     };
+  stable certCodeMap :
+    {var root : Node__1000929467<Text, Nat>; var size : Nat__1040412405};
+  stable certState : {var nextCertId : Nat};
+  stable certificatesMap :
+    {
+      var root : Node__1000929467<Nat, TrekCertificate__276647924>;
+      var size : Nat__1040412405
+    };
   stable gearItems :
     {
       var blockIndex : Nat__1040412405;
@@ -292,6 +305,12 @@ actor ({
       var blocks : [var [var ?BookingInquiry__450314208]];
       var elementIndex : Nat__1040412405
     };
+  stable notifState : {var nextNotifId : Nat};
+  stable notificationsMap :
+    {
+      var root : Node__1000929467<Nat, Notification__879889657>;
+      var size : Nat__1040412405
+    };
   stable packageSeed : [Package__226567178];
   stable packages :
     {
@@ -299,12 +318,30 @@ actor ({
       var blocks : [var [var ?Package__226567178]];
       var elementIndex : Nat__1040412405
     };
+  stable pageViewsList :
+    {
+      var blockIndex : Nat__1040412405;
+      var blocks : [var [var ?PageViewEvent__373850296]];
+      var elementIndex : Nat__1040412405
+    };
+  stable photoState : {var nextPhotoSeq : Nat};
+  stable photosMap :
+    {
+      var root : Node__1000929467<Text, TrekPhoto__372685550>;
+      var size : Nat__1040412405
+    };
   stable reviewSeed : [Review__422344017];
+  stable reviewState : {var nextReviewId : Nat};
   stable reviews :
     {
       var blockIndex : Nat__1040412405;
       var blocks : [var [var ?Review__422344017]];
       var elementIndex : Nat__1040412405
+    };
+  stable reviewsMap :
+    {
+      var root : Node__1000929467<Nat, FullReview__508355796>;
+      var size : Nat__1040412405
     };
   stable state : {var nextBookingSeq : Nat};
   stable trekSeed : [Trek__857611341];
@@ -313,5 +350,11 @@ actor ({
       var blockIndex : Nat__1040412405;
       var blocks : [var [var ?Trek__857611341]];
       var elementIndex : Nat__1040412405
-    }
-});
+    };
+  stable waitlistMap :
+    {
+      var root : Node__1000929467<Text, WaitlistEntry__111990395>;
+      var size : Nat__1040412405
+    };
+  stable waitlistState : {var nextWaitlistSeq : Nat}
+};

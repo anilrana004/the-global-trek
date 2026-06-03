@@ -11,6 +11,66 @@ type Yatra =
    region: text;
    startEnd: text;
  };
+type WaitlistInput = 
+ record {
+   batchDate: text;
+   email: text;
+   name: text;
+   phone: text;
+   trekSlug: text;
+ };
+type WaitlistEntryFull = 
+ record {
+   batchId: text;
+   batchStartDate: text;
+   email: text;
+   id: text;
+   joinedAt: int;
+   name: text;
+   phone: text;
+   position: nat;
+   status: text;
+   trekName: text;
+   trekSlug: text;
+ };
+type TrekPhotoInput = 
+ record {
+   caption: text;
+   dateOfTrek: text;
+   isProfilePhoto: bool;
+   storageUrl: text;
+   trekSlug: text;
+   uploaderEmail: text;
+   uploaderName: text;
+ };
+type TrekPhoto = 
+ record {
+   approvedAt: opt int;
+   caption: text;
+   dateOfTrek: text;
+   id: text;
+   isProfilePhoto: bool;
+   status: text;
+   storageUrl: text;
+   submittedAt: int;
+   trekSlug: text;
+   uploaderEmail: text;
+   uploaderName: text;
+ };
+type TrekCertificate = 
+ record {
+   bookingId: nat;
+   certificateCode: text;
+   completedDate: text;
+   duration: text;
+   guideName: text;
+   id: nat;
+   issuedAt: int;
+   maxAltitude: text;
+   trekName: text;
+   trekSlug: text;
+   userId: principal;
+ };
 type Trek = 
  record {
    ageGroup: text;
@@ -30,6 +90,26 @@ type Trek =
    region: text;
    startPoint: text;
  };
+type ReviewInput = 
+ record {
+   bookingEmail: text;
+   bookingId: text;
+   campsiteRating: nat;
+   foodRating: nat;
+   groupType: text;
+   guideRating: nat;
+   organizationRating: nat;
+   overallRating: nat;
+   photoUrls: vec text;
+   reviewText: text;
+   reviewerCity: text;
+   reviewerName: text;
+   safetyRating: nat;
+   transportRating: nat;
+   trekSlug: text;
+   valueRating: nat;
+ };
+type ReviewId = nat;
 type Review = 
  record {
    helpful: nat;
@@ -42,6 +122,21 @@ type Review =
    trekId: text;
    userId: text;
    verified: bool;
+ };
+type Result_2 = 
+ variant {
+   err: text;
+   ok: nat;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok: ReviewId;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok;
  };
 type ParticipantInput = 
  record {
@@ -69,6 +164,18 @@ type Package =
    name: text;
    price: nat;
  };
+type Notification = 
+ record {
+   actionUrl: text;
+   batchDate: text;
+   createdAt: int;
+   id: nat;
+   isRead: bool;
+   message: text;
+   title: text;
+   trekName: text;
+   userId: principal;
+ };
 type GearItem = 
  record {
    brand: text;
@@ -78,6 +185,29 @@ type GearItem =
    name: text;
    pricePerDay: nat;
    spec: text;
+ };
+type FullReview = 
+ record {
+   bookingEmail: text;
+   bookingId: text;
+   campsiteRating: nat;
+   foodRating: nat;
+   groupType: text;
+   guideRating: nat;
+   helpfulCount: nat;
+   id: ReviewId;
+   organizationRating: nat;
+   overallRating: nat;
+   photoUrls: vec text;
+   reviewText: text;
+   reviewerCity: text;
+   reviewerName: text;
+   safetyRating: nat;
+   status: text;
+   submittedAt: int;
+   transportRating: nat;
+   trekSlug: text;
+   valueRating: nat;
  };
 type BookingStatus = 
  variant {
@@ -126,6 +256,13 @@ type Booking =
    trekSlug: text;
    userId: text;
  };
+type BlogPostStatus = 
+ variant {
+   archived;
+   draft;
+   published;
+   scheduled;
+ };
 type BlogPost = 
  record {
    category: text;
@@ -134,6 +271,19 @@ type BlogPost =
    id: text;
    imageQuery: text;
    title: text;
+ };
+type BatchAvailabilityRecord = 
+ record {
+   availableSeats: nat;
+   batchId: text;
+   durationDays: nat;
+   endDate: text;
+   price: nat;
+   startDate: text;
+   status: text;
+   totalSeats: nat;
+   trekName: text;
+   trekSlug: text;
  };
 type BatchAvailability = 
  record {
@@ -156,6 +306,38 @@ type Batch =
    startDate: text;
    trekId: text;
  };
+type AggregateRating = 
+ record {
+   campsiteAvg: float64;
+   foodAvg: float64;
+   guideAvg: float64;
+   organizationAvg: float64;
+   overallAvg: float64;
+   safetyAvg: float64;
+   totalReviews: nat;
+   transportAvg: float64;
+   trekSlug: text;
+   valueAvg: float64;
+ };
+type AdminBlogPost = 
+ record {
+   author: text;
+   category: text;
+   content: text;
+   createdAt: int;
+   excerpt: text;
+   focusKeyword: text;
+   heroImageUrl: text;
+   id: nat;
+   metaDescription: text;
+   publishAt: opt int;
+   publishedAt: opt int;
+   slug: text;
+   status: BlogPostStatus;
+   tags: vec text;
+   title: text;
+   updatedAt: int;
+ };
 type AddOns = 
  record {
    gearBoots: bool;
@@ -168,16 +350,48 @@ type AddOns =
    travelInsurance: bool;
  };
 service : {
+  approveReview: (reviewId: ReviewId) -> ();
+  approveTrekPhoto: (photoId: text) -> (bool);
   cancelBooking: (bookingId: text, _reason: text) -> (bool);
+  createAdminBlogPost: (title: text, slug: text, excerpt: text, content:
+   text, heroImageUrl: text, author: text, category: text, tags: vec text,
+   metaDescription: text, focusKeyword: text) -> (Result_2);
   createBooking: (input: BookingInput) -> (text);
+  createNotification: (userId: principal, trekName: text, batchDate: 
+   text, title: text, message: text, actionUrl: text) -> (Result_2);
   createReview: (review: Review) -> (text);
+  deleteAdminBlogPost: (postId: nat) -> (Result);
+  deleteNotification: (notificationId: nat) -> (Result);
+  getAdminBlogPost: (postId: nat) -> (opt AdminBlogPost) query;
+  getAdminBlogPostBySlug: (slug: text) -> (opt AdminBlogPost) query;
+  getAggregateRating: (trekSlug: text) -> (AggregateRating) query;
+  getAllAdminBlogPosts: () -> (vec AdminBlogPost) query;
+  getAllApprovedPhotos: () -> (vec TrekPhoto) query;
+  getAllBatchAvailability: () -> (vec BatchAvailabilityRecord) query;
+  getAllBookings: () -> (vec Booking) query;
+  getAllPendingPhotos: () -> (vec TrekPhoto) query;
+  getAllWaitlistEntries: () -> (vec WaitlistEntryFull) query;
+  getApprovedPhotos: (trekSlug: text) -> (vec TrekPhoto) query;
+  getApprovedReviews: (trekSlug: text) -> (vec FullReview) query;
   getAvailableSeats: (trekSlug: text, batchDate: text) -> (nat) query;
   getBatchAvailability: (trekSlug: text) -> (vec BatchAvailability) query;
   getBooking: (bookingId: text) -> (opt Booking) query;
+  getCertificate: (certCode: text) -> (opt TrekCertificate) query;
+  getNotifications: () -> (vec Notification) query;
+  getPackage: (packageId: text) -> (opt Package) query;
   getPackageById: (packageId: text) -> (opt Package) query;
+  getPendingReviews: () -> (vec FullReview) query;
+  getPublishedAdminBlogPosts: () -> (vec AdminBlogPost);
+  getRecentViewers: (trekSlug: text) -> (nat) query;
+  getSeatAvailability: (trekSlug: text, batchDate: text) ->
+   (BatchAvailability) query;
   getTrek: (id: text) -> (opt Trek) query;
   getUserBookings: (contactEmail: text) -> (vec Booking) query;
+  getUserCertificates: () -> (vec TrekCertificate) query;
+  getWaitlistCount: (trekSlug: text, batchDate: text) -> (nat) query;
   getYatra: (yatraId: text) -> (opt Yatra) query;
+  isAdmin: (adminCaller: principal) -> (bool);
+  joinWaitlist: (input: WaitlistInput) -> (text);
   listAllReviews: () -> (vec Review) query;
   listBatches: (trekId: text) -> (vec Batch) query;
   listBlogPosts: () -> (vec BlogPost) query;
@@ -187,8 +401,26 @@ service : {
   listTreks: () -> (vec Trek) query;
   listUserBookings: (userId: text) -> (vec Booking) query;
   listYatras: () -> (vec Yatra) query;
+  markNotificationRead: (notificationId: nat) -> (Result);
+  markNotificationReadAuth: (notificationId: nat) -> (Result);
+  markTrekCompleted: (bookingId: nat, trekName: text, trekSlug: text,
+   maxAltitude: text, duration: text, completedDate: text, guideName:
+   text) -> (Result_2);
+  notifyWaitlistBatch: (trekName: text, batchDate: text, actionUrl: text) ->
+   (Result_2);
+  notifyWaitlistEntry: (entryId: text) -> ();
+  publishAdminBlogPost: (postId: nat) -> (Result);
+  recordPageView: (trekSlug: text) -> ();
+  rejectReview: (reviewId: ReviewId) -> ();
+  scheduleAdminBlogPost: (postId: nat, publishAt: int) -> (Result);
   searchTreks: (searchTerm: text) -> (vec Trek) query;
   submitBookingInquiry: (inquiry: BookingInquiry) -> (text);
+  submitReview: (input: ReviewInput) -> (Result_1);
+  submitTrekPhoto: (input: TrekPhotoInput) -> (text);
+  updateAdminBlogPost: (postId: nat, title: text, slug: text, excerpt: 
+   text, content: text, heroImageUrl: text, author: text, category: text,
+   tags: vec text, metaDescription: text, focusKeyword: text) -> (Result);
   updateBatchAvailability: (batchId: text, seatsBooked: nat) -> (bool);
   updatePaymentStatus: (bookingId: text, paidAmount: nat) -> (bool);
+  upvoteReview: (reviewId: ReviewId) -> ();
 }

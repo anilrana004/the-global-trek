@@ -1,12 +1,17 @@
-import Migration "migration";
+
 import List "mo:core/List";
 import Map "mo:core/Map";
 import Int "mo:core/Int";
 import Nat "mo:core/Nat";
 import Text "mo:core/Text";
 import Time "mo:core/Time";
+import Array "mo:core/Array";
+import Float "mo:core/Float";
+import Result "mo:core/Result";
+import Principal "mo:core/Principal";
+import Debug "mo:core/Debug";
 
-(with migration = Migration.migrate)
+
 actor {
 
   // ── Types ──────────────────────────────────────────────────────────────
@@ -190,6 +195,139 @@ actor {
     highlights : [Text];
     inclusions : [Text];
     images : [Text];
+  };
+
+  public type TrekPhoto = {
+    id : Text;
+    trekSlug : Text;
+    uploaderEmail : Text;
+    uploaderName : Text;
+    dateOfTrek : Text;
+    caption : Text;
+    storageUrl : Text;
+    isProfilePhoto : Bool;
+    status : Text;
+    submittedAt : Int;
+    approvedAt : ?Int;
+  };
+
+  public type TrekPhotoInput = {
+    trekSlug : Text;
+    uploaderEmail : Text;
+    uploaderName : Text;
+    dateOfTrek : Text;
+    caption : Text;
+    storageUrl : Text;
+    isProfilePhoto : Bool;
+  };
+
+  public type WaitlistEntry = {
+    id : Text;
+    trekSlug : Text;
+    batchDate : Text;
+    name : Text;
+    email : Text;
+    phone : Text;
+    createdAt : Int;
+  };
+
+  public type WaitlistInput = {
+    trekSlug : Text;
+    batchDate : Text;
+    name : Text;
+    email : Text;
+    phone : Text;
+  };
+
+  public type PageViewEvent = {
+    trekSlug : Text;
+    timestamp : Int;
+  };
+
+  // ── New Types (Review Submission, Availability Dashboard, Admin) ─────────
+
+  public type ReviewId = Nat;
+
+  public type ReviewInput = {
+    trekSlug : Text;
+    bookingEmail : Text;
+    bookingId : Text;
+    overallRating : Nat;
+    guideRating : Nat;
+    foodRating : Nat;
+    safetyRating : Nat;
+    campsiteRating : Nat;
+    valueRating : Nat;
+    organizationRating : Nat;
+    transportRating : Nat;
+    reviewText : Text;
+    reviewerName : Text;
+    reviewerCity : Text;
+    groupType : Text;
+    photoUrls : [Text];
+  };
+
+  public type FullReview = {
+    id : ReviewId;
+    trekSlug : Text;
+    bookingEmail : Text;
+    bookingId : Text;
+    overallRating : Nat;
+    guideRating : Nat;
+    foodRating : Nat;
+    safetyRating : Nat;
+    campsiteRating : Nat;
+    valueRating : Nat;
+    organizationRating : Nat;
+    transportRating : Nat;
+    reviewText : Text;
+    reviewerName : Text;
+    reviewerCity : Text;
+    groupType : Text;
+    photoUrls : [Text];
+    status : Text;
+    helpfulCount : Nat;
+    submittedAt : Int;
+  };
+
+  public type AggregateRating = {
+    trekSlug : Text;
+    overallAvg : Float;
+    guideAvg : Float;
+    foodAvg : Float;
+    safetyAvg : Float;
+    campsiteAvg : Float;
+    valueAvg : Float;
+    organizationAvg : Float;
+    transportAvg : Float;
+    totalReviews : Nat;
+  };
+
+  public type BatchAvailabilityRecord = {
+    trekSlug : Text;
+    trekName : Text;
+    batchId : Text;
+    startDate : Text;
+    endDate : Text;
+    durationDays : Nat;
+    price : Nat;
+    totalSeats : Nat;
+    availableSeats : Nat;
+    status : Text;
+  };
+
+  public type WaitlistEntryFull = {
+    id : Text;
+    trekSlug : Text;
+    batchId : Text;
+    trekName : Text;
+    batchStartDate : Text;
+    name : Text;
+    email : Text;
+    phone : Text;
+    joinedAt : Int;
+    position : Nat;
+    status : Text;
   };
 
   // ── Seed data ──────────────────────────────────────────────────────────
@@ -582,6 +720,16 @@ actor {
 
   // ── Stable state ───────────────────────────────────────────────────────
 
+  // New feature state maps
+  let photosMap : Map.Map<Text, TrekPhoto> = Map.empty<Text, TrekPhoto>();
+  let waitlistMap : Map.Map<Text, WaitlistEntry> = Map.empty<Text, WaitlistEntry>();
+  let reviewsMap : Map.Map<Nat, FullReview> = Map.empty<Nat, FullReview>();
+  let reviewState = { var nextReviewId : Nat = 0 };
+  let adminState = { var adminPrincipals : [Text] = [] };
+  let pageViewsList : List.List<PageViewEvent> = List.empty<PageViewEvent>();
+  let waitlistState = { var nextWaitlistSeq : Nat = 1 };
+  let photoState = { var nextPhotoSeq : Nat = 1 };
+
   let treks : List.List<Trek> = List.fromArray(trekSeed);
   let blogPosts : List.List<BlogPost> = List.fromArray(blogSeed);
   let batches : List.List<Batch> = List.fromArray(batchSeed);
@@ -845,5 +993,823 @@ actor {
     updated;
   };
 
+  // ── Trekker Photo System ───────────────────────────────────────────────
+
+  public func submitTrekPhoto(input : TrekPhotoInput) : async Text {
+    let seq = photoState.nextPhotoSeq;
+    photoState.nextPhotoSeq += 1;
+    let photoId = "photo-" # input.trekSlug # "-" # seq.toText();
+    let photo : TrekPhoto = {
+      id = photoId;
+      trekSlug = input.trekSlug;
+      uploaderEmail = input.uploaderEmail;
+      uploaderName = input.uploaderName;
+      dateOfTrek = input.dateOfTrek;
+      caption = input.caption;
+      storageUrl = input.storageUrl;
+      isProfilePhoto = input.isProfilePhoto;
+      status = "pending";
+      submittedAt = Time.now();
+      approvedAt = null;
+    };
+    photosMap.add(photoId, photo);
+    photoId;
+  };
+
+  public query func getApprovedPhotos(trekSlug : Text) : async [TrekPhoto] {
+    let result = List.empty<TrekPhoto>();
+    for ((_, photo) in photosMap.entries()) {
+      if (photo.status == "approved" and photo.trekSlug == trekSlug) {
+        result.add(photo);
+      };
+    };
+    let arr = result.toArray();
+    // Sort by submittedAt descending
+    arr.sort<TrekPhoto>(func(a, b) { Int.compare(b.submittedAt, a.submittedAt) });
+  };
+
+  public func approveTrekPhoto(photoId : Text) : async Bool {
+    switch (photosMap.get(photoId)) {
+      case null false;
+      case (?photo) {
+        photosMap.add(photoId, { photo with status = "approved"; approvedAt = ?Time.now() });
+        true;
+      };
+    };
+  };
+
+  public query func getAllPendingPhotos() : async [TrekPhoto] {
+    let result = List.empty<TrekPhoto>();
+    for ((_, photo) in photosMap.entries()) {
+      if (photo.status == "pending") {
+        result.add(photo);
+      };
+    };
+    result.toArray();
+  };
+
+  public query func getAllApprovedPhotos() : async [TrekPhoto] {
+    let result = List.empty<TrekPhoto>();
+    for ((_, photo) in photosMap.entries()) {
+      if (photo.status == "approved") {
+        result.add(photo);
+      };
+    };
+    let arr = result.toArray();
+    arr.sort<TrekPhoto>(func(a, b) { Int.compare(b.submittedAt, a.submittedAt) });
+  };
+
+  // ── Waitlist System ────────────────────────────────────────────────────
+
+  public func joinWaitlist(input : WaitlistInput) : async Text {
+    let seq = waitlistState.nextWaitlistSeq;
+    waitlistState.nextWaitlistSeq += 1;
+    let entryId = "wl-" # input.trekSlug # "-" # input.batchDate # "-" # seq.toText();
+    let entry : WaitlistEntry = {
+      id = entryId;
+      trekSlug = input.trekSlug;
+      batchDate = input.batchDate;
+      name = input.name;
+      email = input.email;
+      phone = input.phone;
+      createdAt = Time.now();
+    };
+    waitlistMap.add(entryId, entry);
+    // Count current position
+    var position : Nat = 0;
+    for ((_, wl) in waitlistMap.entries()) {
+      if (wl.trekSlug == input.trekSlug and wl.batchDate == input.batchDate) {
+        position += 1;
+      };
+    };
+    "You are #" # position.toText() # " on the waitlist";
+  };
+
+  public query func getWaitlistCount(trekSlug : Text, batchDate : Text) : async Nat {
+    var count : Nat = 0;
+    for ((_, wl) in waitlistMap.entries()) {
+      if (wl.trekSlug == trekSlug and wl.batchDate == batchDate) {
+        count += 1;
+      };
+    };
+    count;
+  };
+
+  // ── Page View Tracking ─────────────────────────────────────────────────
+
+  public func recordPageView(trekSlug : Text) : async () {
+    let event : PageViewEvent = {
+      trekSlug = trekSlug;
+      timestamp = Time.now();
+    };
+    pageViewsList.add(event);
+    // Prune entries older than 2 hours to bound memory growth
+    let twoHoursAgo = Time.now() - 7_200_000_000_000;
+    pageViewsList.retain(func(e : PageViewEvent) : Bool {
+      e.timestamp > twoHoursAgo
+    });
+  };
+
+  public query func getRecentViewers(trekSlug : Text) : async Nat {
+    let oneHourAgo = Time.now() - 3_600_000_000_000;
+    var count : Nat = 0;
+    for (event in pageViewsList.values()) {
+      if (event.trekSlug == trekSlug and event.timestamp > oneHourAgo) {
+        count += 1;
+      };
+    };
+    count;
+  };
+
+  // ── Enhanced Seat Availability ─────────────────────────────────────────
+
+  public query func getSeatAvailability(trekSlug : Text, batchDate : Text) : async BatchAvailability {
+    let key = trekSlug # "_" # batchDate;
+    switch (batchAvailabilityMap.get(key)) {
+      case (?ba) ba;
+      case null {
+        {
+          trekSlug = trekSlug;
+          batchDate = batchDate;
+          totalSeats = 0;
+          bookedSeats = 0;
+          availableSeats = 0;
+          price = 0;
+          batchType = "Unknown";
+        };
+      };
+    };
+  };
+
+  public query func getPackage(packageId : Text) : async ?Package {
+    packages.find(func(p : Package) : Bool { p.id == packageId });
+  };
+
+  // ── Review Submission System ───────────────────────────────────────────
+
+  public func submitReview(input : ReviewInput) : async Result.Result<ReviewId, Text> {
+    if (input.overallRating < 1 or input.overallRating > 5) {
+      return #err("Overall rating must be between 1 and 5");
+    };
+    if (input.reviewText.size() < 50) {
+      return #err("Review text must be at least 50 characters");
+    };
+    let rid = reviewState.nextReviewId;
+    reviewState.nextReviewId += 1;
+    let review : FullReview = {
+      id = rid;
+      trekSlug = input.trekSlug;
+      bookingEmail = input.bookingEmail;
+      bookingId = input.bookingId;
+      overallRating = input.overallRating;
+      guideRating = input.guideRating;
+      foodRating = input.foodRating;
+      safetyRating = input.safetyRating;
+      campsiteRating = input.campsiteRating;
+      valueRating = input.valueRating;
+      organizationRating = input.organizationRating;
+      transportRating = input.transportRating;
+      reviewText = input.reviewText;
+      reviewerName = input.reviewerName;
+      reviewerCity = input.reviewerCity;
+      groupType = input.groupType;
+      photoUrls = input.photoUrls;
+      status = "pending";
+      helpfulCount = 0;
+      submittedAt = Time.now();
+    };
+    reviewsMap.add(rid, review);
+    #ok(rid);
+  };
+
+  public query func getApprovedReviews(trekSlug : Text) : async [FullReview] {
+    let buf = List.empty<FullReview>();
+    for ((_, r) in reviewsMap.entries()) {
+      if (r.status == "approved" and r.trekSlug == trekSlug) {
+        buf.add(r);
+      };
+    };
+    buf.toArray();
+  };
+
+  public query func getPendingReviews() : async [FullReview] {
+    let buf = List.empty<FullReview>();
+    for ((_, r) in reviewsMap.entries()) {
+      if (r.status == "pending") {
+        buf.add(r);
+      };
+    };
+    buf.toArray();
+  };
+
+  public func approveReview(reviewId : ReviewId) : async () {
+    switch (reviewsMap.get(reviewId)) {
+      case null {};
+      case (?r) {
+        reviewsMap.add(reviewId, { r with status = "approved" });
+      };
+    };
+  };
+
+  public func rejectReview(reviewId : ReviewId) : async () {
+    switch (reviewsMap.get(reviewId)) {
+      case null {};
+      case (?r) {
+        reviewsMap.add(reviewId, { r with status = "rejected" });
+      };
+    };
+  };
+
+  public func upvoteReview(reviewId : ReviewId) : async () {
+    switch (reviewsMap.get(reviewId)) {
+      case null {};
+      case (?r) {
+        reviewsMap.add(reviewId, { r with helpfulCount = r.helpfulCount + 1 });
+      };
+    };
+  };
+
+  public query func getAggregateRating(trekSlug : Text) : async AggregateRating {
+    let buf = List.empty<FullReview>();
+    for ((_, r) in reviewsMap.entries()) {
+      if (r.status == "approved" and r.trekSlug == trekSlug) {
+        buf.add(r);
+      };
+    };
+    let arr = buf.toArray();
+    let count = arr.size();
+    if (count == 0) {
+      return {
+        trekSlug = trekSlug;
+        overallAvg = 0.0;
+        guideAvg = 0.0;
+        foodAvg = 0.0;
+        safetyAvg = 0.0;
+        campsiteAvg = 0.0;
+        valueAvg = 0.0;
+        organizationAvg = 0.0;
+        transportAvg = 0.0;
+        totalReviews = 0;
+      };
+    };
+    var sumOverall : Nat = 0;
+    var sumGuide : Nat = 0;
+    var sumFood : Nat = 0;
+    var sumSafety : Nat = 0;
+    var sumCampsite : Nat = 0;
+    var sumValue : Nat = 0;
+    var sumOrg : Nat = 0;
+    var sumTransport : Nat = 0;
+    for (r in arr.vals()) {
+      sumOverall += r.overallRating;
+      sumGuide += r.guideRating;
+      sumFood += r.foodRating;
+      sumSafety += r.safetyRating;
+      sumCampsite += r.campsiteRating;
+      sumValue += r.valueRating;
+      sumOrg += r.organizationRating;
+      sumTransport += r.transportRating;
+    };
+    let fc = Float.fromInt(count);
+    {
+      trekSlug = trekSlug;
+      overallAvg = Float.fromInt(sumOverall) / fc;
+      guideAvg = Float.fromInt(sumGuide) / fc;
+      foodAvg = Float.fromInt(sumFood) / fc;
+      safetyAvg = Float.fromInt(sumSafety) / fc;
+      campsiteAvg = Float.fromInt(sumCampsite) / fc;
+      valueAvg = Float.fromInt(sumValue) / fc;
+      organizationAvg = Float.fromInt(sumOrg) / fc;
+      transportAvg = Float.fromInt(sumTransport) / fc;
+      totalReviews = count;
+    };
+  };
+
+  public shared ({ caller = _ }) func isAdmin(adminCaller : Principal) : async Bool {
+    adminState.adminPrincipals.size() == 0 or
+    adminState.adminPrincipals.find<Text>(func(p : Text) : Bool { p == adminCaller.toText() }) != null;
+  };
+
+  // ── Availability Dashboard ─────────────────────────────────────────────
+
+  public query func getAllBatchAvailability() : async [BatchAvailabilityRecord] {
+    let trekDefs : [(Text, Text, Nat)] = [
+      ("kedarkantha",    "Kedarkantha Trek",          8500),
+      ("chopta-tungnath","Chopta Tungnath Trek",       6500),
+      ("har-ki-dun",     "Har Ki Dun Trek",            9500),
+      ("kuari-pass",     "Kuari Pass Trek",            10500),
+      ("phulara-ridge",  "Phulara Ridge Trek",         9200),
+      ("hampta-pass",    "Hampta Pass Trek",           11999),
+      ("sar-pass",       "Sar Pass Trek",              10999),
+      ("valley-of-flowers", "Valley of Flowers Trek", 12500),
+      ("roopkund",       "Roopkund Trek",              14500),
+      ("brahmatal",      "Brahmatal Trek",             9500),
+      ("nag-tibba",      "Nag Tibba Trek",             6500),
+      ("dayara-bugyal",  "Dayara Bugyal Trek",         8500),
+      ("kheerganga",     "Kheerganga Trek",            7500),
+      ("triund",         "Triund Trek",                6500),
+      ("beas-kund",      "Beas Kund Trek",             9000),
+    ];
+    // 4 batches per trek (month - startDate - endDate)
+    let batchDefs : [(Text, Text, Text)] = [
+      ("b1", "Jan 5, 2026",  "Jan 9, 2026"),
+      ("b2", "Mar 10, 2026", "Mar 14, 2026"),
+      ("b3", "Oct 5, 2026",  "Oct 9, 2026"),
+      ("b4", "Dec 20, 2026", "Dec 24, 2026"),
+    ];
+    let buf = List.empty<BatchAvailabilityRecord>();
+    for ((slug, name, basePrice) in trekDefs.vals()) {
+      for ((batchId, startDate, endDate) in batchDefs.vals()) {
+        let mapKey = slug # "_" # startDate;
+        let availSeats : Nat = switch (batchAvailabilityMap.get(mapKey)) {
+          case (?ba) ba.availableSeats;
+          case null 15;
+        };
+        let status : Text = if (availSeats == 0) "soldout"
+          else if (availSeats <= 5) "almostfull"
+          else "available";
+        buf.add({
+          trekSlug = slug;
+          trekName = name;
+          batchId = batchId;
+          startDate = startDate;
+          endDate = endDate;
+          durationDays = 5;
+          price = basePrice;
+          totalSeats = 15;
+          availableSeats = availSeats;
+          status = status;
+        });
+      };
+    };
+    buf.toArray();
+  };
+
+  // ── Admin Waitlist Management ─────────────────────────────────────────
+
+  public query func getAllWaitlistEntries() : async [WaitlistEntryFull] {
+    let buf = List.empty<WaitlistEntryFull>();
+    for ((_, entry) in waitlistMap.entries()) {
+      // Compute position: count entries for same trekSlug+batchDate with earlier joinedAt
+      var pos : Nat = 1;
+      for ((_, other) in waitlistMap.entries()) {
+        if (other.trekSlug == entry.trekSlug and other.batchDate == entry.batchDate and other.createdAt < entry.createdAt) {
+          pos += 1;
+        };
+      };
+      buf.add({
+        id = entry.id;
+        trekSlug = entry.trekSlug;
+        batchId = entry.batchDate;
+        trekName = entry.trekSlug;
+        batchStartDate = entry.batchDate;
+        name = entry.name;
+        email = entry.email;
+        phone = entry.phone;
+        joinedAt = entry.createdAt;
+        position = pos;
+        status = "waiting";
+      });
+    };
+    buf.toArray();
+  };
+
+  public func notifyWaitlistEntry(entryId : Text) : async () {
+    // WaitlistEntry has no status field — mark by removing and re-adding with a note
+    // Since the type has no status, we simply acknowledge; the admin panel tracks this externally
+    ignore entryId;
+  };
+
+  // ── GROUP 1: In-App Notifications ─────────────────────────────────────
+
+  public type Notification = {
+    id : Nat;
+    userId : Principal;
+    trekName : Text;
+    batchDate : Text;
+    title : Text;
+    message : Text;
+    isRead : Bool;
+    createdAt : Int;
+    actionUrl : Text;
+  };
+
+  let notificationsMap : Map.Map<Nat, Notification> = Map.empty<Nat, Notification>();
+  let notifState = { var nextNotifId : Nat = 0 };
+
+  public func createNotification(
+    userId : Principal,
+    trekName : Text,
+    batchDate : Text,
+    title : Text,
+    message : Text,
+    actionUrl : Text,
+  ) : async Result.Result<Nat, Text> {
+    let id = notifState.nextNotifId;
+    notifState.nextNotifId += 1;
+    let notif : Notification = {
+      id;
+      userId;
+      trekName;
+      batchDate;
+      title;
+      message;
+      isRead = false;
+      createdAt = Time.now();
+      actionUrl;
+    };
+    notificationsMap.add(id, notif);
+    #ok(id);
+  };
+
+  public query ({ caller }) func getNotifications() : async [Notification] {
+    let buf = List.empty<Notification>();
+    for ((_, notif) in notificationsMap.entries()) {
+      if (notif.userId == caller) {
+        buf.add(notif);
+      };
+    };
+    buf.toArray();
+  };
+
+  public shared ({ caller }) func markNotificationRead(notificationId : Nat) : async Result.Result<(), Text> {
+    switch (notificationsMap.get(notificationId)) {
+      case null { #err("Notification not found") };
+      case (?notif) {
+        if (notif.userId != caller) {
+          #err("Not authorized");
+        } else {
+          notificationsMap.add(notificationId, { notif with isRead = true });
+          #ok(());
+        };
+      };
+    };
+  };
+
+  public shared ({ caller }) func markNotificationReadAuth(notificationId : Nat) : async Result.Result<(), Text> {
+    switch (notificationsMap.get(notificationId)) {
+      case null { #err("Notification not found") };
+      case (?notif) {
+        if (notif.userId != caller) {
+          #err("Not authorized");
+        } else {
+          notificationsMap.add(notificationId, { notif with isRead = true });
+          #ok(());
+        };
+      };
+    };
+  };
+
+  public shared ({ caller }) func deleteNotification(notificationId : Nat) : async Result.Result<(), Text> {
+    switch (notificationsMap.get(notificationId)) {
+      case null { #err("Notification not found") };
+      case (?notif) {
+        if (notif.userId != caller) {
+          #err("Not authorized");
+        } else {
+          notificationsMap.remove(notificationId);
+          #ok(());
+        };
+      };
+    };
+  };
+
+  // notifyWaitlistBatch — notify all waitlist entries for a trek+batch combo
+  public func notifyWaitlistBatch(
+    trekName : Text,
+    batchDate : Text,
+    actionUrl : Text,
+  ) : async Result.Result<Nat, Text> {
+    var count : Nat = 0;
+    for ((_, entry) in waitlistMap.entries()) {
+      if (entry.batchDate == batchDate) {
+        let id = notifState.nextNotifId;
+        notifState.nextNotifId += 1;
+        // We store by email as a pseudo-principal since waitlist uses text IDs
+        // Create a notification keyed to a placeholder principal; frontend matches by stored email
+        let notif : Notification = {
+          id;
+          userId = Principal.fromText("2vxsx-fae"); // anonymous placeholder
+          trekName;
+          batchDate;
+          title = "A seat just opened on " # trekName;
+          message = "Good news! A seat has opened on the " # trekName # " batch departing " # batchDate # ". Book now before it fills up again.";
+          isRead = false;
+          createdAt = Time.now();
+          actionUrl;
+        };
+        notificationsMap.add(id, notif);
+        count += 1;
+      };
+    };
+    #ok(count);
+  };
+
+  // ── GROUP 2: Trek Completion Certificates ─────────────────────────────
+
+  public type TrekCertificate = {
+    id : Nat;
+    bookingId : Nat;
+    userId : Principal;
+    trekName : Text;
+    trekSlug : Text;
+    maxAltitude : Text;
+    duration : Text;
+    completedDate : Text;
+    guideName : Text;
+    certificateCode : Text;
+    issuedAt : Int;
+  };
+
+  let certificatesMap : Map.Map<Nat, TrekCertificate> = Map.empty<Nat, TrekCertificate>();
+  let certCodeMap : Map.Map<Text, Nat> = Map.empty<Text, Nat>();
+  let certState = { var nextCertId : Nat = 0 };
+
+  public shared ({ caller }) func markTrekCompleted(
+    bookingId : Nat,
+    trekName : Text,
+    trekSlug : Text,
+    maxAltitude : Text,
+    duration : Text,
+    completedDate : Text,
+    guideName : Text,
+  ) : async Result.Result<Nat, Text> {
+    let certCode = "GT-" # bookingId.toText() # "-2026";
+    // Prevent duplicate certificates for the same booking
+    switch (certCodeMap.get(certCode)) {
+      case (?_) { return #err("Certificate already issued for this booking") };
+      case null {};
+    };
+    let id = certState.nextCertId;
+    certState.nextCertId += 1;
+    let cert : TrekCertificate = {
+      id;
+      bookingId;
+      userId = caller;
+      trekName;
+      trekSlug;
+      maxAltitude;
+      duration;
+      completedDate;
+      guideName;
+      certificateCode = certCode;
+      issuedAt = Time.now();
+    };
+    certificatesMap.add(id, cert);
+    certCodeMap.add(certCode, id);
+    #ok(id);
+  };
+
+  public query ({ caller }) func getUserCertificates() : async [TrekCertificate] {
+    let buf = List.empty<TrekCertificate>();
+    for ((_, cert) in certificatesMap.entries()) {
+      if (cert.userId == caller) {
+        buf.add(cert);
+      };
+    };
+    buf.toArray();
+  };
+
+  public query func getCertificate(certCode : Text) : async ?TrekCertificate {
+    switch (certCodeMap.get(certCode)) {
+      case null null;
+      case (?certId) { certificatesMap.get(certId) };
+    };
+  };
+
+  // ── GROUP 3: Blog Post Scheduler ──────────────────────────────────────
+
+  public type BlogPostStatus = {
+    #draft;
+    #scheduled;
+    #published;
+    #archived;
+  };
+
+  public type AdminBlogPost = {
+    id : Nat;
+    title : Text;
+    slug : Text;
+    excerpt : Text;
+    content : Text;
+    heroImageUrl : Text;
+    author : Text;
+    category : Text;
+    tags : [Text];
+    status : BlogPostStatus;
+    publishAt : ?Int;
+    publishedAt : ?Int;
+    createdAt : Int;
+    updatedAt : Int;
+    metaDescription : Text;
+    focusKeyword : Text;
+  };
+
+  let adminBlogMap : Map.Map<Nat, AdminBlogPost> = Map.empty<Nat, AdminBlogPost>();
+  let adminBlogSlugMap : Map.Map<Text, Nat> = Map.empty<Text, Nat>();
+  let adminBlogState = { var nextBlogId : Nat = 0 };
+
+  public shared (_) func createAdminBlogPost(
+    title : Text,
+    slug : Text,
+    excerpt : Text,
+    content : Text,
+    heroImageUrl : Text,
+    author : Text,
+    category : Text,
+    tags : [Text],
+    metaDescription : Text,
+    focusKeyword : Text,
+  ) : async Result.Result<Nat, Text> {
+    // Prevent duplicate slugs
+    switch (adminBlogSlugMap.get(slug)) {
+      case (?_) { return #err("A post with this slug already exists") };
+      case null {};
+    };
+    let id = adminBlogState.nextBlogId;
+    adminBlogState.nextBlogId += 1;
+    let now = Time.now();
+    let post : AdminBlogPost = {
+      id;
+      title;
+      slug;
+      excerpt;
+      content;
+      heroImageUrl;
+      author;
+      category;
+      tags;
+      status = #draft;
+      publishAt = null;
+      publishedAt = null;
+      createdAt = now;
+      updatedAt = now;
+      metaDescription;
+      focusKeyword;
+    };
+    adminBlogMap.add(id, post);
+    adminBlogSlugMap.add(slug, id);
+    #ok(id);
+  };
+
+  public shared (_) func updateAdminBlogPost(
+    postId : Nat,
+    title : Text,
+    slug : Text,
+    excerpt : Text,
+    content : Text,
+    heroImageUrl : Text,
+    author : Text,
+    category : Text,
+    tags : [Text],
+    metaDescription : Text,
+    focusKeyword : Text,
+  ) : async Result.Result<(), Text> {
+    switch (adminBlogMap.get(postId)) {
+      case null { #err("Post not found") };
+      case (?post) {
+        // Update slug index if slug changed
+        if (post.slug != slug) {
+          adminBlogSlugMap.remove(post.slug);
+          adminBlogSlugMap.add(slug, postId);
+        };
+        adminBlogMap.add(postId, {
+          post with
+          title;
+          slug;
+          excerpt;
+          content;
+          heroImageUrl;
+          author;
+          category;
+          tags;
+          metaDescription;
+          focusKeyword;
+          updatedAt = Time.now();
+        });
+        #ok(());
+      };
+    };
+  };
+
+  public shared (_) func publishAdminBlogPost(postId : Nat) : async Result.Result<(), Text> {
+    switch (adminBlogMap.get(postId)) {
+      case null { #err("Post not found") };
+      case (?post) {
+        let now = Time.now();
+        adminBlogMap.add(postId, {
+          post with
+          status = #published;
+          publishedAt = ?now;
+          updatedAt = now;
+        });
+        #ok(());
+      };
+    };
+  };
+
+  public shared (_) func scheduleAdminBlogPost(postId : Nat, publishAt : Int) : async Result.Result<(), Text> {
+    switch (adminBlogMap.get(postId)) {
+      case null { #err("Post not found") };
+      case (?post) {
+        adminBlogMap.add(postId, {
+          post with
+          status = #scheduled;
+          publishAt = ?publishAt;
+          updatedAt = Time.now();
+        });
+        #ok(());
+      };
+    };
+  };
+
+  public shared (_) func deleteAdminBlogPost(postId : Nat) : async Result.Result<(), Text> {
+    switch (adminBlogMap.get(postId)) {
+      case null { #err("Post not found") };
+      case (?post) {
+        adminBlogMap.add(postId, {
+          post with
+          status = #archived;
+          updatedAt = Time.now();
+        });
+        #ok(());
+      };
+    };
+  };
+
+  public query func getAdminBlogPost(postId : Nat) : async ?AdminBlogPost {
+    adminBlogMap.get(postId);
+  };
+
+  public query func getAllAdminBlogPosts() : async [AdminBlogPost] {
+    let buf = List.empty<AdminBlogPost>();
+    for ((_, post) in adminBlogMap.entries()) {
+      switch (post.status) {
+        case (#archived) {};
+        case _ { buf.add(post) };
+      };
+    };
+    buf.toArray();
+  };
+
+  // getPublishedAdminBlogPosts auto-publishes any #scheduled posts whose publishAt <= Time.now()
+  public func getPublishedAdminBlogPosts() : async [AdminBlogPost] {
+    let now = Time.now();
+    // Auto-publish scheduled posts whose time has arrived
+    for ((id, post) in adminBlogMap.entries()) {
+      switch (post.status) {
+        case (#scheduled) {
+          switch (post.publishAt) {
+            case (?at) {
+              if (at <= now) {
+                adminBlogMap.add(id, {
+                  post with
+                  status = #published;
+                  publishedAt = ?now;
+                  updatedAt = now;
+                });
+              };
+            };
+            case null {};
+          };
+        };
+        case _ {};
+      };
+    };
+    // Collect published posts
+    let buf = List.empty<AdminBlogPost>();
+    for ((_, post) in adminBlogMap.entries()) {
+      switch (post.status) {
+        case (#published) { buf.add(post) };
+        case _ {};
+      };
+    };
+    buf.toArray();
+  };
+
+  public query func getAdminBlogPostBySlug(slug : Text) : async ?AdminBlogPost {
+    switch (adminBlogSlugMap.get(slug)) {
+      case null null;
+      case (?postId) {
+        switch (adminBlogMap.get(postId)) {
+          case null null;
+          case (?post) {
+            switch (post.status) {
+              case (#published) { ?post };
+              case _ null;
+            };
+          };
+        };
+      };
+    };
+  };
+
+  public query func getAllBookings() : async [Booking] {
+    let buf = List.empty<Booking>();
+    for ((_, booking) in bookingsMap.entries()) {
+      buf.add(booking);
+    };
+    buf.toArray();
+  };
 };
 

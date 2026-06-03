@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
+import { SeatCounter } from "../../components/ui/SeatCounter";
 import type { BatchSlot, Trek } from "./types";
 import { batchStatusBadge, formatDate, generateBatches } from "./types";
 
@@ -39,7 +40,7 @@ export function StickyBookingWidget({
   const groupDiscount = participants >= 6 ? Math.round(subtotal * 0.1) : 0;
   const finalTotal = total - groupDiscount;
 
-  const badge = selectedBatch
+  const _badge = selectedBatch
     ? batchStatusBadge(selectedBatch.status, selectedBatch.availableSeats)
     : null;
 
@@ -119,14 +120,13 @@ export function StickyBookingWidget({
                     </option>
                   ))}
                 </select>
-                {badge && (
-                  <span
-                    className="mt-1 inline-block text-xs font-semibold px-2 py-0.5 rounded-full"
-                    style={{ background: badge.bg, color: badge.color }}
-                  >
-                    ⚡ {badge.label}
-                  </span>
-                )}
+                <div className="mt-2">
+                  <SeatCounter
+                    trekSlug={slug}
+                    batchDate={selectedBatch?.startDate ?? ""}
+                    variant="sidebar"
+                  />
+                </div>
               </div>
 
               {/* Participants */}

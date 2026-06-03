@@ -1,9 +1,11 @@
+import { type AdminBlogPost, BlogPostStatus, createActor } from "@/backend";
 import { Badge } from "@/components/ui/badge";
 import { blogsData } from "@/data/blogs";
+import { useActor } from "@caffeineai/core-infrastructure";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, BookOpen, Calendar, Clock, User } from "lucide-react";
 import { motion } from "motion/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const CATEGORIES = [
   "All",
@@ -53,6 +55,16 @@ function GradientImage({
 
 export default function BlogPage() {
   const [activeCategory, setActiveCategory] = useState("All");
+  const { actor, isFetching } = useActor(createActor);
+  const [canisterPosts, setCanisterPosts] = useState<AdminBlogPost[]>([]);
+
+  useEffect(() => {
+    if (!actor || isFetching) return;
+    actor
+      .getPublishedAdminBlogPosts()
+      .then((posts) => setCanisterPosts(posts))
+      .catch(() => {});
+  }, [actor, isFetching]);
 
   const filtered =
     activeCategory === "All"
@@ -101,6 +113,132 @@ export default function BlogPage() {
           </p>
         </div>
       </section>
+
+      {/* Latest from Our Team — canister-published posts */}
+      {canisterPosts.length > 0 && (
+        <section
+          className="py-12 px-4 bg-muted/30 border-b border-border"
+          data-ocid="blog.latest_from_team_section"
+        >
+          <div className="max-w-6xl mx-auto">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-1 h-7 rounded-full bg-primary" />
+              <h2 className="font-display text-2xl font-bold text-foreground">
+                Latest from Our Team
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {canisterPosts.slice(0, 6).map((post, i) => {
+                const catColor = getCategoryColor(post.category);
+                const formattedDate = new Date(
+                  Number(post.createdAt) / 1_000_000,
+                ).toLocaleDateString("en-IN", {
+                  month: "short",
+                  year: "numeric",
+                });
+                return (
+                  <motion.article
+                    key={String(post.id)}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: (i % 3) * 0.07 }}
+                    className="bg-card border border-border rounded-2xl overflow-hidden group hover:shadow-lg transition-all duration-300 flex flex-col"
+                    data-ocid={`blog.team_post.item.${i + 1}`}
+                  >
+                    {post.heroImageUrl ? (
+                      <div
+                        className="relative overflow-hidden"
+                        style={{ height: "200px" }}
+                      >
+                        <img
+                          src={post.heroImageUrl}
+                          alt={post.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).src =
+                              "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&q=80";
+                          }}
+                        />
+                        <div className="absolute top-3 left-3">
+                          <span
+                            className="text-xs font-mono font-semibold px-3 py-1 rounded-full"
+                            style={{
+                              background: catColor.bg,
+                              color: catColor.text,
+                            }}
+                          >
+                            {post.category}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        className="relative overflow-hidden"
+                        style={{ height: "200px" }}
+                      >
+                        <GradientImage
+                          query={post.category}
+                          alt={post.title}
+                          className="w-full h-full transition-transform duration-500 group-hover:scale-105"
+                        />
+                        <div className="absolute top-3 left-3">
+                          <span
+                            className="text-xs font-mono font-semibold px-3 py-1 rounded-full"
+                            style={{
+                              background: catColor.bg,
+                              color: catColor.text,
+                            }}
+                          >
+                            {post.category}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    <div className="p-5 flex flex-col flex-1">
+                      <h3
+                        className="font-display text-lg font-semibold text-foreground mb-2 leading-tight group-hover:text-primary transition-colors line-clamp-2"
+                        style={{ fontFamily: "'Playfair Display', serif" }}
+                      >
+                        {post.title}
+                      </h3>
+                      <p className="text-muted-foreground text-sm leading-relaxed line-clamp-2 flex-1">
+                        {post.excerpt}
+                      </p>
+                      <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                            style={{ background: "#145C38" }}
+                          >
+                            {post.author.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold text-foreground leading-none">
+                              {post.author}
+                            </p>
+                            <p className="flex items-center gap-1 text-[10px] text-muted-foreground font-mono mt-0.5">
+                              <Calendar className="w-2.5 h-2.5" />
+                              {formattedDate}
+                            </p>
+                          </div>
+                        </div>
+                        <a
+                          href={`/blog/${post.slug}`}
+                          className="flex items-center gap-1 text-xs font-mono font-semibold text-primary hover:gap-2 transition-all"
+                          data-ocid={`blog.team_post.read_more.${i + 1}`}
+                        >
+                          Read More <ArrowRight className="w-3.5 h-3.5" />
+                        </a>
+                      </div>
+                    </div>
+                  </motion.article>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Category Tabs */}
       <section className="bg-card border-b border-border sticky top-0 z-20">

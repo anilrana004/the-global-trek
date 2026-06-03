@@ -1,3 +1,4 @@
+import { ReviewSubmissionForm } from "@/components/ReviewSubmissionForm";
 import {
   Accordion,
   AccordionContent,
@@ -5,6 +6,11 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  useAggregateRating,
+  useApprovedReviews,
+  useUpvoteReview,
+} from "@/hooks/useReviews";
 import { Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
@@ -596,12 +602,25 @@ export function GearAndPacking({ trek }: { trek: Trek }) {
 
 // ─── SECTION 10: REVIEWS ──────────────────────────────────────────────────────
 export function ReviewsSection({ trek }: { trek: Trek }) {
-  const reviews: Review[] = trek.detailedReviews?.length
-    ? trek.detailedReviews
-    : SAMPLE_REVIEWS;
+  const trekSlug = trek.slug ?? trek.id;
+  const { data: liveReviews, isLoading: reviewsLoading } =
+    useApprovedReviews(trekSlug);
+  const { data: aggregate } = useAggregateRating(trekSlug);
+  const upvoteMutation = useUpvoteReview();
+
+  // Merge: live reviews from backend, fallback to local sample data
+  const reviews: Review[] =
+    liveReviews && liveReviews.length > 0
+      ? liveReviews
+      : trek.detailedReviews?.length
+        ? trek.detailedReviews
+        : SAMPLE_REVIEWS;
+
   const [filterRating, setFilterRating] = useState<number | null>(null);
   const [filterGroup, setFilterGroup] = useState<string | null>(null);
   const [filterMonth, _setFilterMonth] = useState<number | null>(null);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [localHelpful, setLocalHelpful] = useState<Record<string, boolean>>({});
 
   const filtered = reviews.filter((r) => {
     if (filterRating && r.rating !== filterRating) return false;
@@ -610,9 +629,14 @@ export function ReviewsSection({ trek }: { trek: Trek }) {
     return true;
   });
 
-  const avgRating = (
-    reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
-  ).toFixed(1);
+  const avgRating = aggregate?.avg
+    ? aggregate.avg.toFixed(1)
+    : reviews.length > 0
+      ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
+      : "0.0";
+
+  const reviewCount = aggregate?.count ?? reviews.length;
+
   const dimLabels: Array<[keyof (typeof reviews)[0]["dimensions"], string]> = [
     ["guideExpertise", "Guide Expertise"],
     ["food", "Food Quality"],
@@ -630,20 +654,51 @@ export function ReviewsSection({ trek }: { trek: Trek }) {
     );
   }
 
+  const handleHelpful = (reviewId: string) => {
+    if (localHelpful[reviewId]) return;
+    setLocalHelpful((prev) => ({ ...prev, [reviewId]: true }));
+    upvoteMutation.mutate({ reviewId, trekSlug });
+  };
+
   return (
     <section
       className="max-w-7xl mx-auto px-4 py-16"
       data-ocid="trek_reviews.section"
     >
-      <motion.h2
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        className="text-3xl font-bold mb-8"
-        style={{ fontFamily: "'Playfair Display', serif", color: GT_DARK }}
-      >
-        Trekker Reviews & Community
-      </motion.h2>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <motion.h2
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-3xl font-bold"
+          style={{ fontFamily: "'Playfair Display', serif", color: GT_DARK }}
+        >
+          Trekker Reviews & Community
+        </motion.h2>
+        <button
+          type="button"
+          onClick={() => setShowReviewForm(true)}
+          className="shrink-0 px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:opacity-90 flex items-center gap-2"
+          style={{
+            background: GT_AMBER,
+            color: "#0A2E1A",
+            fontFamily: "'DM Sans', sans-serif",
+          }}
+          data-ocid="trek_reviews.write_review_button"
+        >
+          <Star className="w-4 h-4" />
+          Write a Review
+        </button>
+      </div>
+
+      {showReviewForm && (
+        <ReviewSubmissionForm
+          trekSlug={trekSlug}
+          trekName={trek.name}
+          onClose={() => setShowReviewForm(false)}
+          onSuccess={() => setShowReviewForm(false)}
+        />
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
         {/* Rating summary */}
@@ -651,6 +706,7 @@ export function ReviewsSection({ trek }: { trek: Trek }) {
           <div
             className="rounded-2xl p-6 text-center"
             style={{ background: GT_DARK }}
+            data-ocid="trek_reviews.rating_summary"
           >
             <div
               className="text-6xl font-bold text-white"
@@ -662,7 +718,7 @@ export function ReviewsSection({ trek }: { trek: Trek }) {
               <Stars n={Number.parseFloat(avgRating)} />
             </div>
             <p className="text-white/70 text-sm">
-              {reviews.length} verified reviews
+              {reviewCount} verified review{reviewCount !== 1 ? "s" : ""}
             </p>
           </div>
           <div className="mt-4 space-y-2">
@@ -676,7 +732,7 @@ export function ReviewsSection({ trek }: { trek: Trek }) {
           </div>
         </div>
 
-        {/* Filters */}
+        {/* Filters + cards */}
         <div className="lg:col-span-2">
           <div className="flex flex-wrap gap-2 mb-4">
             {[5, 4, 3].map((r) => (
@@ -713,86 +769,184 @@ export function ReviewsSection({ trek }: { trek: Trek }) {
             ))}
           </div>
 
-          {/* Review cards */}
-          <div className="space-y-4">
-            {filtered.slice(0, 4).map((review, i) => (
-              <div
-                key={`review-${review.id}`}
-                className="bg-white rounded-2xl p-5 shadow-sm border"
-                style={{ borderColor: "rgba(26,122,76,0.12)" }}
-                data-ocid={`trek_reviews.card.${i + 1}`}
-              >
-                <div className="flex items-start gap-4 mb-3">
-                  <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-                    style={{ background: GT_GREEN }}
-                  >
-                    {review.author[0]}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                      <div>
-                        <span className="font-semibold text-gray-800">
-                          {review.author}
-                        </span>
-                        {review.verified && (
-                          <span
-                            className="ml-2 text-xs px-1.5 py-0.5 rounded-full"
-                            style={{ background: "#f0fdf4", color: GT_GREEN }}
-                          >
-                            ✅ Verified
-                          </span>
-                        )}
-                      </div>
-                      <Stars n={review.rating} />
-                    </div>
-                    <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-500">
-                      <span>
-                        {MONTH_NAMES[(review.month ?? 1) - 1]} {review.tripYear}
-                      </span>
-                      <span>•</span>
-                      <span
-                        className="capitalize px-1.5 py-0.5 rounded-full"
-                        style={{ background: "#f8fafc", color: GT_DARK }}
-                      >
-                        {review.groupType}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <h4
-                  className="font-semibold text-sm mb-1"
-                  style={{ color: GT_DARK }}
+          {/* Loading skeleton */}
+          {reviewsLoading && (
+            <div className="space-y-4" data-ocid="trek_reviews.loading_state">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={`skel-${i}`}
+                  className="bg-white rounded-2xl p-5 shadow-sm border animate-pulse"
+                  style={{ borderColor: "rgba(26,122,76,0.12)" }}
                 >
-                  {review.title}
-                </h4>
-                <p className="text-sm text-gray-600 leading-relaxed">
-                  {review.comment}
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {Object.entries(review.dimensions)
-                    .slice(0, 3)
-                    .map(([k, v]) => (
-                      <span
-                        key={`rdim-${review.id}-${k}`}
-                        className="text-xs px-2 py-0.5 rounded-full"
-                        style={{ background: "#f0fdf4", color: GT_DARK }}
-                      >
-                        {k === "guideExpertise"
-                          ? "Guide"
-                          : k === "valueForMoney"
-                            ? "Value"
-                            : k.charAt(0).toUpperCase() + k.slice(1)}
-                        : {v}/5
-                      </span>
-                    ))}
+                  <div className="flex gap-4 mb-3">
+                    <div className="w-10 h-10 rounded-full bg-gray-200" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3 bg-gray-200 rounded w-1/3" />
+                      <div className="h-2 bg-gray-100 rounded w-1/4" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-2 bg-gray-100 rounded w-full" />
+                    <div className="h-2 bg-gray-100 rounded w-4/5" />
+                  </div>
                 </div>
-                <div className="mt-2 text-xs text-gray-400">
-                  👍 {review.helpful} found this helpful
+              ))}
+            </div>
+          )}
+
+          {/* Empty state */}
+          {!reviewsLoading && filtered.length === 0 && (
+            <div
+              className="bg-white rounded-2xl p-8 text-center border"
+              style={{ borderColor: "rgba(26,122,76,0.12)" }}
+              data-ocid="trek_reviews.empty_state"
+            >
+              <div className="text-4xl mb-3">⭐</div>
+              <h3
+                className="text-lg font-bold mb-2"
+                style={{
+                  fontFamily: "'Playfair Display', serif",
+                  color: GT_DARK,
+                }}
+              >
+                Be the first to review this trek!
+              </h3>
+              <p className="text-sm text-gray-500 mb-4">
+                Share your experience and help future trekkers plan their
+                adventure.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowReviewForm(true)}
+                className="px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:opacity-90"
+                style={{ background: GT_AMBER, color: "#0A2E1A" }}
+                data-ocid="trek_reviews.empty_write_button"
+              >
+                Write the First Review
+              </button>
+            </div>
+          )}
+
+          {/* Review cards */}
+          {!reviewsLoading && filtered.length > 0 && (
+            <div className="space-y-4">
+              {filtered.slice(0, 5).map((review, i) => (
+                <div
+                  key={`review-${review.id}`}
+                  className="bg-white rounded-2xl p-5 shadow-sm border"
+                  style={{ borderColor: "rgba(26,122,76,0.12)" }}
+                  data-ocid={`trek_reviews.card.${i + 1}`}
+                >
+                  <div className="flex items-start gap-4 mb-3">
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+                      style={{ background: GT_GREEN }}
+                    >
+                      {review.author[0]}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div>
+                          <span className="font-semibold text-gray-800">
+                            {review.author}
+                          </span>
+                          {review.reviewerCity && (
+                            <span className="ml-2 text-xs text-gray-400">
+                              {review.reviewerCity}
+                            </span>
+                          )}
+                          {review.verified && (
+                            <span
+                              className="ml-2 text-xs px-1.5 py-0.5 rounded-full"
+                              style={{ background: "#f0fdf4", color: GT_GREEN }}
+                            >
+                              ✅ Verified
+                            </span>
+                          )}
+                        </div>
+                        <Stars n={review.rating} />
+                      </div>
+                      <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-500">
+                        <span>
+                          {MONTH_NAMES[(review.month ?? 1) - 1]}{" "}
+                          {review.tripYear}
+                        </span>
+                        <span>•</span>
+                        <span
+                          className="capitalize px-1.5 py-0.5 rounded-full"
+                          style={{ background: "#f8fafc", color: GT_DARK }}
+                        >
+                          {review.groupType}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  {review.title && (
+                    <h4
+                      className="font-semibold text-sm mb-1"
+                      style={{ color: GT_DARK }}
+                    >
+                      {review.title}
+                    </h4>
+                  )}
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    {review.comment || review.reviewText || ""}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {Object.entries(review.dimensions)
+                      .filter(([, v]) => v > 0)
+                      .slice(0, 4)
+                      .map(([k, v]) => (
+                        <span
+                          key={`rdim-${review.id}-${k}`}
+                          className="text-xs px-2 py-0.5 rounded-full"
+                          style={{ background: "#f0fdf4", color: GT_DARK }}
+                        >
+                          {k === "guideExpertise"
+                            ? "Guide"
+                            : k === "valueForMoney"
+                              ? "Value"
+                              : k.charAt(0).toUpperCase() + k.slice(1)}
+                          : {v}/5
+                        </span>
+                      ))}
+                  </div>
+                  <div className="mt-3 flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleHelpful(review.id)}
+                      className="flex items-center gap-1.5 text-xs transition-colors"
+                      style={{
+                        color: localHelpful[review.id] ? GT_GREEN : "#9ca3af",
+                        fontWeight: localHelpful[review.id] ? 600 : 400,
+                      }}
+                      data-ocid={`trek_reviews.helpful_button.${i + 1}`}
+                    >
+                      <Heart
+                        className="w-3.5 h-3.5"
+                        fill={localHelpful[review.id] ? GT_GREEN : "none"}
+                      />
+                      {review.helpful + (localHelpful[review.id] ? 1 : 0)} found
+                      this helpful
+                    </button>
+                  </div>
+                  {review.photos && review.photos.length > 0 && (
+                    <div className="flex gap-2 mt-3">
+                      {review.photos.map((photo, pi) => (
+                        <img
+                          key={`rphoto-${review.id}-${pi}`}
+                          src={photo}
+                          alt={`Trek snapshot ${pi + 1}`}
+                          className="w-16 h-16 object-cover rounded-lg border"
+                          style={{ borderColor: "rgba(26,122,76,0.15)" }}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

@@ -20,6 +20,36 @@ export interface AddOns {
   'travelInsurance' : boolean,
   'porter' : boolean,
 }
+export interface AdminBlogPost {
+  'id' : bigint,
+  'heroImageUrl' : string,
+  'metaDescription' : string,
+  'status' : BlogPostStatus,
+  'title' : string,
+  'focusKeyword' : string,
+  'content' : string,
+  'publishAt' : [] | [bigint],
+  'createdAt' : bigint,
+  'slug' : string,
+  'tags' : Array<string>,
+  'publishedAt' : [] | [bigint],
+  'author' : string,
+  'updatedAt' : bigint,
+  'excerpt' : string,
+  'category' : string,
+}
+export interface AggregateRating {
+  'foodAvg' : number,
+  'campsiteAvg' : number,
+  'safetyAvg' : number,
+  'trekSlug' : string,
+  'organizationAvg' : number,
+  'totalReviews' : bigint,
+  'guideAvg' : number,
+  'transportAvg' : number,
+  'valueAvg' : number,
+  'overallAvg' : number,
+}
 export interface Batch {
   'id' : string,
   'endDate' : string,
@@ -39,6 +69,18 @@ export interface BatchAvailability {
   'batchDate' : string,
   'batchType' : string,
 }
+export interface BatchAvailabilityRecord {
+  'durationDays' : bigint,
+  'status' : string,
+  'endDate' : string,
+  'totalSeats' : bigint,
+  'availableSeats' : bigint,
+  'trekName' : string,
+  'trekSlug' : string,
+  'batchId' : string,
+  'price' : bigint,
+  'startDate' : string,
+}
 export interface BlogPost {
   'id' : string,
   'title' : string,
@@ -47,6 +89,10 @@ export interface BlogPost {
   'excerpt' : string,
   'category' : string,
 }
+export type BlogPostStatus = { 'scheduled' : null } |
+  { 'published' : null } |
+  { 'draft' : null } |
+  { 'archived' : null };
 export interface Booking {
   'id' : string,
   'status' : BookingStatus,
@@ -88,6 +134,28 @@ export type BookingStatus = { 'Confirmed' : null } |
   { 'Cancelled' : null } |
   { 'Completed' : null } |
   { 'Pending' : null };
+export interface FullReview {
+  'id' : ReviewId,
+  'status' : string,
+  'foodRating' : bigint,
+  'photoUrls' : Array<string>,
+  'bookingId' : string,
+  'bookingEmail' : string,
+  'campsiteRating' : bigint,
+  'reviewerCity' : string,
+  'submittedAt' : bigint,
+  'reviewText' : string,
+  'reviewerName' : string,
+  'organizationRating' : bigint,
+  'overallRating' : bigint,
+  'transportRating' : bigint,
+  'trekSlug' : string,
+  'safetyRating' : bigint,
+  'valueRating' : bigint,
+  'helpfulCount' : bigint,
+  'groupType' : string,
+  'guideRating' : bigint,
+}
 export interface GearItem {
   'id' : string,
   'name' : string,
@@ -96,6 +164,17 @@ export interface GearItem {
   'pricePerDay' : bigint,
   'category' : string,
   'brand' : string,
+}
+export interface Notification {
+  'id' : bigint,
+  'title' : string,
+  'actionUrl' : string,
+  'userId' : Principal,
+  'createdAt' : bigint,
+  'isRead' : boolean,
+  'message' : string,
+  'trekName' : string,
+  'batchDate' : string,
 }
 export interface Package {
   'id' : string,
@@ -121,6 +200,12 @@ export interface ParticipantInput {
   'govtIdNumber' : string,
   'firstName' : string,
 }
+export type Result = { 'ok' : null } |
+  { 'err' : string };
+export type Result_1 = { 'ok' : ReviewId } |
+  { 'err' : string };
+export type Result_2 = { 'ok' : bigint } |
+  { 'err' : string };
 export interface Review {
   'id' : string,
   'verified' : boolean,
@@ -132,6 +217,25 @@ export interface Review {
   'trekDate' : string,
   'rating' : bigint,
   'helpful' : bigint,
+}
+export type ReviewId = bigint;
+export interface ReviewInput {
+  'foodRating' : bigint,
+  'photoUrls' : Array<string>,
+  'bookingId' : string,
+  'bookingEmail' : string,
+  'campsiteRating' : bigint,
+  'reviewerCity' : string,
+  'reviewText' : string,
+  'reviewerName' : string,
+  'organizationRating' : bigint,
+  'overallRating' : bigint,
+  'transportRating' : bigint,
+  'trekSlug' : string,
+  'safetyRating' : bigint,
+  'valueRating' : bigint,
+  'groupType' : string,
+  'guideRating' : bigint,
 }
 export interface Trek {
   'id' : string,
@@ -151,6 +255,61 @@ export interface Trek {
   'startPoint' : string,
   'ageGroup' : string,
 }
+export interface TrekCertificate {
+  'id' : bigint,
+  'completedDate' : string,
+  'duration' : string,
+  'bookingId' : bigint,
+  'userId' : Principal,
+  'guideName' : string,
+  'trekName' : string,
+  'trekSlug' : string,
+  'issuedAt' : bigint,
+  'maxAltitude' : string,
+  'certificateCode' : string,
+}
+export interface TrekPhoto {
+  'id' : string,
+  'status' : string,
+  'uploaderName' : string,
+  'isProfilePhoto' : boolean,
+  'approvedAt' : [] | [bigint],
+  'submittedAt' : bigint,
+  'storageUrl' : string,
+  'trekSlug' : string,
+  'caption' : string,
+  'uploaderEmail' : string,
+  'dateOfTrek' : string,
+}
+export interface TrekPhotoInput {
+  'uploaderName' : string,
+  'isProfilePhoto' : boolean,
+  'storageUrl' : string,
+  'trekSlug' : string,
+  'caption' : string,
+  'uploaderEmail' : string,
+  'dateOfTrek' : string,
+}
+export interface WaitlistEntryFull {
+  'id' : string,
+  'status' : string,
+  'name' : string,
+  'joinedAt' : bigint,
+  'batchStartDate' : string,
+  'email' : string,
+  'trekName' : string,
+  'trekSlug' : string,
+  'batchId' : string,
+  'phone' : string,
+  'position' : bigint,
+}
+export interface WaitlistInput {
+  'name' : string,
+  'email' : string,
+  'trekSlug' : string,
+  'phone' : string,
+  'batchDate' : string,
+}
 export interface Yatra {
   'id' : string,
   'region' : string,
@@ -164,16 +323,61 @@ export interface Yatra {
   'price' : string,
 }
 export interface _SERVICE {
+  'approveReview' : ActorMethod<[ReviewId], undefined>,
+  'approveTrekPhoto' : ActorMethod<[string], boolean>,
   'cancelBooking' : ActorMethod<[string, string], boolean>,
+  'createAdminBlogPost' : ActorMethod<
+    [
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      Array<string>,
+      string,
+      string,
+    ],
+    Result_2
+  >,
   'createBooking' : ActorMethod<[BookingInput], string>,
+  'createNotification' : ActorMethod<
+    [Principal, string, string, string, string, string],
+    Result_2
+  >,
   'createReview' : ActorMethod<[Review], string>,
+  'deleteAdminBlogPost' : ActorMethod<[bigint], Result>,
+  'deleteNotification' : ActorMethod<[bigint], Result>,
+  'getAdminBlogPost' : ActorMethod<[bigint], [] | [AdminBlogPost]>,
+  'getAdminBlogPostBySlug' : ActorMethod<[string], [] | [AdminBlogPost]>,
+  'getAggregateRating' : ActorMethod<[string], AggregateRating>,
+  'getAllAdminBlogPosts' : ActorMethod<[], Array<AdminBlogPost>>,
+  'getAllApprovedPhotos' : ActorMethod<[], Array<TrekPhoto>>,
+  'getAllBatchAvailability' : ActorMethod<[], Array<BatchAvailabilityRecord>>,
+  'getAllBookings' : ActorMethod<[], Array<Booking>>,
+  'getAllPendingPhotos' : ActorMethod<[], Array<TrekPhoto>>,
+  'getAllWaitlistEntries' : ActorMethod<[], Array<WaitlistEntryFull>>,
+  'getApprovedPhotos' : ActorMethod<[string], Array<TrekPhoto>>,
+  'getApprovedReviews' : ActorMethod<[string], Array<FullReview>>,
   'getAvailableSeats' : ActorMethod<[string, string], bigint>,
   'getBatchAvailability' : ActorMethod<[string], Array<BatchAvailability>>,
   'getBooking' : ActorMethod<[string], [] | [Booking]>,
+  'getCertificate' : ActorMethod<[string], [] | [TrekCertificate]>,
+  'getNotifications' : ActorMethod<[], Array<Notification>>,
+  'getPackage' : ActorMethod<[string], [] | [Package]>,
   'getPackageById' : ActorMethod<[string], [] | [Package]>,
+  'getPendingReviews' : ActorMethod<[], Array<FullReview>>,
+  'getPublishedAdminBlogPosts' : ActorMethod<[], Array<AdminBlogPost>>,
+  'getRecentViewers' : ActorMethod<[string], bigint>,
+  'getSeatAvailability' : ActorMethod<[string, string], BatchAvailability>,
   'getTrek' : ActorMethod<[string], [] | [Trek]>,
   'getUserBookings' : ActorMethod<[string], Array<Booking>>,
+  'getUserCertificates' : ActorMethod<[], Array<TrekCertificate>>,
+  'getWaitlistCount' : ActorMethod<[string, string], bigint>,
   'getYatra' : ActorMethod<[string], [] | [Yatra]>,
+  'isAdmin' : ActorMethod<[Principal], boolean>,
+  'joinWaitlist' : ActorMethod<[WaitlistInput], string>,
   'listAllReviews' : ActorMethod<[], Array<Review>>,
   'listBatches' : ActorMethod<[string], Array<Batch>>,
   'listBlogPosts' : ActorMethod<[], Array<BlogPost>>,
@@ -183,10 +387,41 @@ export interface _SERVICE {
   'listTreks' : ActorMethod<[], Array<Trek>>,
   'listUserBookings' : ActorMethod<[string], Array<Booking>>,
   'listYatras' : ActorMethod<[], Array<Yatra>>,
+  'markNotificationRead' : ActorMethod<[bigint], Result>,
+  'markNotificationReadAuth' : ActorMethod<[bigint], Result>,
+  'markTrekCompleted' : ActorMethod<
+    [bigint, string, string, string, string, string, string],
+    Result_2
+  >,
+  'notifyWaitlistBatch' : ActorMethod<[string, string, string], Result_2>,
+  'notifyWaitlistEntry' : ActorMethod<[string], undefined>,
+  'publishAdminBlogPost' : ActorMethod<[bigint], Result>,
+  'recordPageView' : ActorMethod<[string], undefined>,
+  'rejectReview' : ActorMethod<[ReviewId], undefined>,
+  'scheduleAdminBlogPost' : ActorMethod<[bigint, bigint], Result>,
   'searchTreks' : ActorMethod<[string], Array<Trek>>,
   'submitBookingInquiry' : ActorMethod<[BookingInquiry], string>,
+  'submitReview' : ActorMethod<[ReviewInput], Result_1>,
+  'submitTrekPhoto' : ActorMethod<[TrekPhotoInput], string>,
+  'updateAdminBlogPost' : ActorMethod<
+    [
+      bigint,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      Array<string>,
+      string,
+      string,
+    ],
+    Result
+  >,
   'updateBatchAvailability' : ActorMethod<[string, bigint], boolean>,
   'updatePaymentStatus' : ActorMethod<[string, bigint], boolean>,
+  'upvoteReview' : ActorMethod<[ReviewId], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

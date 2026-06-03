@@ -1,34 +1,12 @@
+import { createActor } from "@/backend";
+import type { TrekCertificate } from "@/backend";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useActor } from "@caffeineai/core-infrastructure";
 import { Link } from "@tanstack/react-router";
 import { Download, Share2 } from "lucide-react";
 import { motion } from "motion/react";
-
-const certificates = [
-  {
-    id: "cert-ct-2025",
-    trekName: "Chopta Tungnath Trek",
-    subtitle: "Chandrashila Summit — 4,000m",
-    trekkerName: "Rahul Mehta",
-    dateCompleted: "October 14, 2025",
-    altitude: "4,000m",
-    guide: "Priya Negi",
-    durationDays: 3,
-    state: "Uttarakhand",
-    bookingId: "GT-2025-CT-04210",
-  },
-  {
-    id: "cert-hp-2025",
-    trekName: "Hampta Pass Trek",
-    subtitle: "Lahaul Valley Crossover — 4,270m",
-    trekkerName: "Rahul Mehta",
-    dateCompleted: "June 12, 2025",
-    altitude: "4,270m",
-    guide: "Rohan Sharma",
-    durationDays: 5,
-    state: "Himachal Pradesh",
-    bookingId: "GT-2025-HP-06891",
-  },
-];
+import { useEffect, useState } from "react";
 
 function MountainWatermark() {
   return (
@@ -46,7 +24,7 @@ function MountainWatermark() {
   );
 }
 
-function CertificateCard({ cert }: { cert: (typeof certificates)[0] }) {
+function CertificateCard({ cert }: { cert: TrekCertificate }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -96,7 +74,14 @@ function CertificateCard({ cert }: { cert: (typeof certificates)[0] }) {
               className="text-3xl font-bold italic"
               style={{ fontFamily: "var(--gt-font-display)", color: "#0A2E1A" }}
             >
-              {cert.trekkerName}
+              {`${cert.trekName
+                .replace(
+                  /(\w+)/g,
+                  (w) => w.charAt(0).toUpperCase() + w.slice(1),
+                )
+                .split(" ")
+                .slice(0, 2)
+                .join(" ")} Trekker`}
             </h2>
             <p className="text-xs text-muted-foreground">
               has successfully completed
@@ -108,7 +93,7 @@ function CertificateCard({ cert }: { cert: (typeof certificates)[0] }) {
               {cert.trekName}
             </h3>
             <p className="text-sm text-muted-foreground italic">
-              {cert.subtitle}
+              Max Altitude: {cert.maxAltitude}
             </p>
             <div className="flex justify-center gap-6 mt-4">
               <div className="text-center">
@@ -119,7 +104,7 @@ function CertificateCard({ cert }: { cert: (typeof certificates)[0] }) {
                     fontFamily: "var(--gt-font-label)",
                   }}
                 >
-                  {cert.altitude}
+                  {cert.maxAltitude}
                 </p>
                 <p
                   className="text-[10px] tracking-wider uppercase text-muted-foreground"
@@ -137,7 +122,7 @@ function CertificateCard({ cert }: { cert: (typeof certificates)[0] }) {
                     fontFamily: "var(--gt-font-label)",
                   }}
                 >
-                  {cert.durationDays} Days
+                  {cert.duration}
                 </p>
                 <p
                   className="text-[10px] tracking-wider uppercase text-muted-foreground"
@@ -155,7 +140,9 @@ function CertificateCard({ cert }: { cert: (typeof certificates)[0] }) {
                     fontFamily: "var(--gt-font-label)",
                   }}
                 >
-                  {cert.state}
+                  {cert.trekSlug
+                    .replace(/-/g, " ")
+                    .replace(/\b\w/g, (c) => c.toUpperCase())}
                 </p>
                 <p
                   className="text-[10px] tracking-wider uppercase text-muted-foreground"
@@ -185,7 +172,7 @@ function CertificateCard({ cert }: { cert: (typeof certificates)[0] }) {
                     fontFamily: "var(--gt-font-body)",
                   }}
                 >
-                  {cert.dateCompleted}
+                  {cert.completedDate}
                 </p>
               </div>
               <div className="text-center">
@@ -219,7 +206,7 @@ function CertificateCard({ cert }: { cert: (typeof certificates)[0] }) {
                     fontFamily: "var(--gt-font-body)",
                   }}
                 >
-                  {cert.guide}
+                  {cert.guideName}
                 </p>
               </div>
             </div>
@@ -227,14 +214,23 @@ function CertificateCard({ cert }: { cert: (typeof certificates)[0] }) {
         </div>
       </div>
       <div className="flex gap-3">
-        <Button
-          className="flex-1 text-white font-bold text-sm"
-          style={{ background: "#145C38", fontFamily: "var(--gt-font-label)" }}
-          data-ocid="certificates.download_button"
+        <Link
+          to="/certificate/$certCode"
+          params={{ certCode: cert.certificateCode }}
+          className="flex-1"
         >
-          <Download className="w-4 h-4 mr-2" />
-          Download PDF
-        </Button>
+          <Button
+            className="w-full text-white font-bold text-sm"
+            style={{
+              background: "#145C38",
+              fontFamily: "var(--gt-font-label)",
+            }}
+            data-ocid="certificates.download_button"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Download Certificate
+          </Button>
+        </Link>
         <Button
           variant="outline"
           className="flex-1 font-bold text-sm"
@@ -242,6 +238,13 @@ function CertificateCard({ cert }: { cert: (typeof certificates)[0] }) {
             borderColor: "#145C38",
             color: "#145C38",
             fontFamily: "var(--gt-font-label)",
+          }}
+          onClick={() => {
+            navigator.clipboard
+              .writeText(
+                `${window.location.origin}/certificate/${cert.certificateCode}`,
+              )
+              .catch(() => {});
           }}
           data-ocid="certificates.share_button"
         >
@@ -286,6 +289,20 @@ function EmptyState() {
 }
 
 export default function CertificatesPage() {
+  const { actor, isFetching } = useActor(createActor);
+  const [certificates, setCertificates] = useState<TrekCertificate[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!actor || isFetching) return;
+    setLoading(true);
+    actor
+      .getUserCertificates()
+      .then((certs) => setCertificates(certs))
+      .catch(() => setCertificates([]))
+      .finally(() => setLoading(false));
+  }, [actor, isFetching]);
+
   return (
     <div
       className="min-h-screen bg-background"
@@ -317,12 +334,21 @@ export default function CertificatesPage() {
         </div>
       </section>
       <div className="max-w-4xl mx-auto px-4 py-12">
-        {certificates.length === 0 ? (
+        {loading ? (
+          <div
+            className="grid grid-cols-1 lg:grid-cols-2 gap-10"
+            data-ocid="certificates.loading_state"
+          >
+            {[1, 2].map((i) => (
+              <Skeleton key={i} className="h-96 w-full rounded-2xl" />
+            ))}
+          </div>
+        ) : certificates.length === 0 ? (
           <EmptyState />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
             {certificates.map((cert) => (
-              <CertificateCard key={cert.id} cert={cert} />
+              <CertificateCard key={String(cert.id)} cert={cert} />
             ))}
           </div>
         )}

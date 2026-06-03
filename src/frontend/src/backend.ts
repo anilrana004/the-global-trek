@@ -102,23 +102,43 @@ export interface ParticipantInput {
     govtIdNumber: string;
     firstName: string;
 }
-export interface BlogPost {
-    id: string;
+export type Result_2 = {
+    __kind__: "ok";
+    ok: bigint;
+} | {
+    __kind__: "err";
+    err: string;
+};
+export interface TrekCertificate {
+    id: bigint;
+    completedDate: string;
+    duration: string;
+    bookingId: bigint;
+    userId: Principal;
+    guideName: string;
+    trekName: string;
+    trekSlug: string;
+    issuedAt: bigint;
+    maxAltitude: string;
+    certificateCode: string;
+}
+export interface AdminBlogPost {
+    id: bigint;
+    heroImageUrl: string;
+    metaDescription: string;
+    status: BlogPostStatus;
     title: string;
-    date: string;
-    imageQuery: string;
+    focusKeyword: string;
+    content: string;
+    publishAt?: bigint;
+    createdAt: bigint;
+    slug: string;
+    tags: Array<string>;
+    publishedAt?: bigint;
+    author: string;
+    updatedAt: bigint;
     excerpt: string;
     category: string;
-}
-export interface BookingInput {
-    participants: Array<ParticipantInput>;
-    promoCode: string;
-    advanceAmount: bigint;
-    totalAmount: bigint;
-    addOns: AddOns;
-    trekSlug: string;
-    paymentType: string;
-    batchDate: string;
 }
 export interface Trek {
     id: string;
@@ -148,6 +168,131 @@ export interface BookingInquiry {
     groupSize: string;
     specialRequirements: string;
 }
+export interface BatchAvailability {
+    totalSeats: bigint;
+    bookedSeats: bigint;
+    availableSeats: bigint;
+    trekSlug: string;
+    price: bigint;
+    batchDate: string;
+    batchType: string;
+}
+export interface WaitlistEntryFull {
+    id: string;
+    status: string;
+    name: string;
+    joinedAt: bigint;
+    batchStartDate: string;
+    email: string;
+    trekName: string;
+    trekSlug: string;
+    batchId: string;
+    phone: string;
+    position: bigint;
+}
+export type Result_1 = {
+    __kind__: "ok";
+    ok: ReviewId;
+} | {
+    __kind__: "err";
+    err: string;
+};
+export interface WaitlistInput {
+    name: string;
+    email: string;
+    trekSlug: string;
+    phone: string;
+    batchDate: string;
+}
+export interface TrekPhotoInput {
+    uploaderName: string;
+    isProfilePhoto: boolean;
+    storageUrl: string;
+    trekSlug: string;
+    caption: string;
+    uploaderEmail: string;
+    dateOfTrek: string;
+}
+export interface Batch {
+    id: string;
+    endDate: string;
+    maxCapacity: bigint;
+    trekId: string;
+    bookedCount: bigint;
+    basePrice: bigint;
+    batchType: string;
+    startDate: string;
+}
+export interface Booking {
+    id: string;
+    status: BookingStatus;
+    participants: Array<ParticipantInput>;
+    userId: string;
+    createdAt: bigint;
+    promoCode: string;
+    advanceAmount: bigint;
+    totalAmount: bigint;
+    addOns: AddOns;
+    trekSlug: string;
+    contactEmail: string;
+    paymentType: string;
+    paidAmount: bigint;
+    batchDate: string;
+    contactPhone: string;
+}
+export type ReviewId = bigint;
+export interface FullReview {
+    id: ReviewId;
+    status: string;
+    foodRating: bigint;
+    photoUrls: Array<string>;
+    bookingId: string;
+    bookingEmail: string;
+    campsiteRating: bigint;
+    reviewerCity: string;
+    submittedAt: bigint;
+    reviewText: string;
+    reviewerName: string;
+    organizationRating: bigint;
+    overallRating: bigint;
+    transportRating: bigint;
+    trekSlug: string;
+    safetyRating: bigint;
+    valueRating: bigint;
+    helpfulCount: bigint;
+    groupType: string;
+    guideRating: bigint;
+}
+export interface Review {
+    id: string;
+    verified: boolean;
+    userId: string;
+    trekId: string;
+    reviewerCity: string;
+    reviewText: string;
+    reviewerName: string;
+    trekDate: string;
+    rating: bigint;
+    helpful: bigint;
+}
+export interface BlogPost {
+    id: string;
+    title: string;
+    date: string;
+    imageQuery: string;
+    excerpt: string;
+    category: string;
+}
+export interface BookingInput {
+    participants: Array<ParticipantInput>;
+    promoCode: string;
+    advanceAmount: bigint;
+    totalAmount: bigint;
+    addOns: AddOns;
+    trekSlug: string;
+    paymentType: string;
+    batchDate: string;
+}
 export interface Package {
     id: string;
     duration: string;
@@ -159,24 +304,60 @@ export interface Package {
     price: bigint;
     images: Array<string>;
 }
-export interface BatchAvailability {
-    totalSeats: bigint;
-    bookedSeats: bigint;
-    availableSeats: bigint;
-    trekSlug: string;
-    price: bigint;
-    batchDate: string;
-    batchType: string;
-}
-export interface Batch {
-    id: string;
+export interface BatchAvailabilityRecord {
+    durationDays: bigint;
+    status: string;
     endDate: string;
-    maxCapacity: bigint;
-    trekId: string;
-    bookedCount: bigint;
-    basePrice: bigint;
-    batchType: string;
+    totalSeats: bigint;
+    availableSeats: bigint;
+    trekName: string;
+    trekSlug: string;
+    batchId: string;
+    price: bigint;
     startDate: string;
+}
+export interface TrekPhoto {
+    id: string;
+    status: string;
+    uploaderName: string;
+    isProfilePhoto: boolean;
+    approvedAt?: bigint;
+    submittedAt: bigint;
+    storageUrl: string;
+    trekSlug: string;
+    caption: string;
+    uploaderEmail: string;
+    dateOfTrek: string;
+}
+export type Result = {
+    __kind__: "ok";
+    ok: null;
+} | {
+    __kind__: "err";
+    err: string;
+};
+export interface AggregateRating {
+    foodAvg: number;
+    campsiteAvg: number;
+    safetyAvg: number;
+    trekSlug: string;
+    organizationAvg: number;
+    totalReviews: bigint;
+    guideAvg: number;
+    transportAvg: number;
+    valueAvg: number;
+    overallAvg: number;
+}
+export interface Notification {
+    id: bigint;
+    title: string;
+    actionUrl: string;
+    userId: Principal;
+    createdAt: bigint;
+    isRead: boolean;
+    message: string;
+    trekName: string;
+    batchDate: string;
 }
 export interface Yatra {
     id: string;
@@ -200,34 +381,23 @@ export interface AddOns {
     travelInsurance: boolean;
     porter: boolean;
 }
-export interface Booking {
-    id: string;
-    status: BookingStatus;
-    participants: Array<ParticipantInput>;
-    userId: string;
-    createdAt: bigint;
-    promoCode: string;
-    advanceAmount: bigint;
-    totalAmount: bigint;
-    addOns: AddOns;
-    trekSlug: string;
-    contactEmail: string;
-    paymentType: string;
-    paidAmount: bigint;
-    batchDate: string;
-    contactPhone: string;
-}
-export interface Review {
-    id: string;
-    verified: boolean;
-    userId: string;
-    trekId: string;
+export interface ReviewInput {
+    foodRating: bigint;
+    photoUrls: Array<string>;
+    bookingId: string;
+    bookingEmail: string;
+    campsiteRating: bigint;
     reviewerCity: string;
     reviewText: string;
     reviewerName: string;
-    trekDate: string;
-    rating: bigint;
-    helpful: bigint;
+    organizationRating: bigint;
+    overallRating: bigint;
+    transportRating: bigint;
+    trekSlug: string;
+    safetyRating: bigint;
+    valueRating: bigint;
+    groupType: string;
+    guideRating: bigint;
 }
 export interface GearItem {
     id: string;
@@ -238,6 +408,12 @@ export interface GearItem {
     category: string;
     brand: string;
 }
+export enum BlogPostStatus {
+    scheduled = "scheduled",
+    published = "published",
+    draft = "draft",
+    archived = "archived"
+}
 export enum BookingStatus {
     Confirmed = "Confirmed",
     Cancelled = "Cancelled",
@@ -245,16 +421,44 @@ export enum BookingStatus {
     Pending = "Pending"
 }
 export interface backendInterface {
+    approveReview(reviewId: ReviewId): Promise<void>;
+    approveTrekPhoto(photoId: string): Promise<boolean>;
     cancelBooking(bookingId: string, _reason: string): Promise<boolean>;
+    createAdminBlogPost(title: string, slug: string, excerpt: string, content: string, heroImageUrl: string, author: string, category: string, tags: Array<string>, metaDescription: string, focusKeyword: string): Promise<Result_2>;
     createBooking(input: BookingInput): Promise<string>;
+    createNotification(userId: Principal, trekName: string, batchDate: string, title: string, message: string, actionUrl: string): Promise<Result_2>;
     createReview(review: Review): Promise<string>;
+    deleteAdminBlogPost(postId: bigint): Promise<Result>;
+    deleteNotification(notificationId: bigint): Promise<Result>;
+    getAdminBlogPost(postId: bigint): Promise<AdminBlogPost | null>;
+    getAdminBlogPostBySlug(slug: string): Promise<AdminBlogPost | null>;
+    getAggregateRating(trekSlug: string): Promise<AggregateRating>;
+    getAllAdminBlogPosts(): Promise<Array<AdminBlogPost>>;
+    getAllApprovedPhotos(): Promise<Array<TrekPhoto>>;
+    getAllBatchAvailability(): Promise<Array<BatchAvailabilityRecord>>;
+    getAllBookings(): Promise<Array<Booking>>;
+    getAllPendingPhotos(): Promise<Array<TrekPhoto>>;
+    getAllWaitlistEntries(): Promise<Array<WaitlistEntryFull>>;
+    getApprovedPhotos(trekSlug: string): Promise<Array<TrekPhoto>>;
+    getApprovedReviews(trekSlug: string): Promise<Array<FullReview>>;
     getAvailableSeats(trekSlug: string, batchDate: string): Promise<bigint>;
     getBatchAvailability(trekSlug: string): Promise<Array<BatchAvailability>>;
     getBooking(bookingId: string): Promise<Booking | null>;
+    getCertificate(certCode: string): Promise<TrekCertificate | null>;
+    getNotifications(): Promise<Array<Notification>>;
+    getPackage(packageId: string): Promise<Package | null>;
     getPackageById(packageId: string): Promise<Package | null>;
+    getPendingReviews(): Promise<Array<FullReview>>;
+    getPublishedAdminBlogPosts(): Promise<Array<AdminBlogPost>>;
+    getRecentViewers(trekSlug: string): Promise<bigint>;
+    getSeatAvailability(trekSlug: string, batchDate: string): Promise<BatchAvailability>;
     getTrek(id: string): Promise<Trek | null>;
     getUserBookings(contactEmail: string): Promise<Array<Booking>>;
+    getUserCertificates(): Promise<Array<TrekCertificate>>;
+    getWaitlistCount(trekSlug: string, batchDate: string): Promise<bigint>;
     getYatra(yatraId: string): Promise<Yatra | null>;
+    isAdmin(adminCaller: Principal): Promise<boolean>;
+    joinWaitlist(input: WaitlistInput): Promise<string>;
     listAllReviews(): Promise<Array<Review>>;
     listBatches(trekId: string): Promise<Array<Batch>>;
     listBlogPosts(): Promise<Array<BlogPost>>;
@@ -264,14 +468,55 @@ export interface backendInterface {
     listTreks(): Promise<Array<Trek>>;
     listUserBookings(userId: string): Promise<Array<Booking>>;
     listYatras(): Promise<Array<Yatra>>;
+    markNotificationRead(notificationId: bigint): Promise<Result>;
+    markNotificationReadAuth(notificationId: bigint): Promise<Result>;
+    markTrekCompleted(bookingId: bigint, trekName: string, trekSlug: string, maxAltitude: string, duration: string, completedDate: string, guideName: string): Promise<Result_2>;
+    notifyWaitlistBatch(trekName: string, batchDate: string, actionUrl: string): Promise<Result_2>;
+    notifyWaitlistEntry(entryId: string): Promise<void>;
+    publishAdminBlogPost(postId: bigint): Promise<Result>;
+    recordPageView(trekSlug: string): Promise<void>;
+    rejectReview(reviewId: ReviewId): Promise<void>;
+    scheduleAdminBlogPost(postId: bigint, publishAt: bigint): Promise<Result>;
     searchTreks(searchTerm: string): Promise<Array<Trek>>;
     submitBookingInquiry(inquiry: BookingInquiry): Promise<string>;
+    submitReview(input: ReviewInput): Promise<Result_1>;
+    submitTrekPhoto(input: TrekPhotoInput): Promise<string>;
+    updateAdminBlogPost(postId: bigint, title: string, slug: string, excerpt: string, content: string, heroImageUrl: string, author: string, category: string, tags: Array<string>, metaDescription: string, focusKeyword: string): Promise<Result>;
     updateBatchAvailability(batchId: string, seatsBooked: bigint): Promise<boolean>;
     updatePaymentStatus(bookingId: string, paidAmount: bigint): Promise<boolean>;
+    upvoteReview(reviewId: ReviewId): Promise<void>;
 }
-import type { AddOns as _AddOns, Booking as _Booking, BookingStatus as _BookingStatus, Package as _Package, ParticipantInput as _ParticipantInput, Trek as _Trek, Yatra as _Yatra } from "./declarations/backend.did.d.ts";
+import type { AddOns as _AddOns, AdminBlogPost as _AdminBlogPost, BlogPostStatus as _BlogPostStatus, Booking as _Booking, BookingStatus as _BookingStatus, Package as _Package, ParticipantInput as _ParticipantInput, Result as _Result, Result_1 as _Result_1, Result_2 as _Result_2, ReviewId as _ReviewId, Trek as _Trek, TrekCertificate as _TrekCertificate, TrekPhoto as _TrekPhoto, Yatra as _Yatra } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
+    async approveReview(arg0: ReviewId): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.approveReview(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.approveReview(arg0);
+            return result;
+        }
+    }
+    async approveTrekPhoto(arg0: string): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.approveTrekPhoto(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.approveTrekPhoto(arg0);
+            return result;
+        }
+    }
     async cancelBooking(arg0: string, arg1: string): Promise<boolean> {
         if (this.processError) {
             try {
@@ -284,6 +529,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.cancelBooking(arg0, arg1);
             return result;
+        }
+    }
+    async createAdminBlogPost(arg0: string, arg1: string, arg2: string, arg3: string, arg4: string, arg5: string, arg6: string, arg7: Array<string>, arg8: string, arg9: string): Promise<Result_2> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.createAdminBlogPost(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+                return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.createAdminBlogPost(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+            return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
         }
     }
     async createBooking(arg0: BookingInput): Promise<string> {
@@ -300,6 +559,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async createNotification(arg0: Principal, arg1: string, arg2: string, arg3: string, arg4: string, arg5: string): Promise<Result_2> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.createNotification(arg0, arg1, arg2, arg3, arg4, arg5);
+                return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.createNotification(arg0, arg1, arg2, arg3, arg4, arg5);
+            return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
+        }
+    }
     async createReview(arg0: Review): Promise<string> {
         if (this.processError) {
             try {
@@ -311,6 +584,188 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.createReview(arg0);
+            return result;
+        }
+    }
+    async deleteAdminBlogPost(arg0: bigint): Promise<Result> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteAdminBlogPost(arg0);
+                return from_candid_Result_n3(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteAdminBlogPost(arg0);
+            return from_candid_Result_n3(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async deleteNotification(arg0: bigint): Promise<Result> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteNotification(arg0);
+                return from_candid_Result_n3(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteNotification(arg0);
+            return from_candid_Result_n3(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getAdminBlogPost(arg0: bigint): Promise<AdminBlogPost | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAdminBlogPost(arg0);
+                return from_candid_opt_n5(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAdminBlogPost(arg0);
+            return from_candid_opt_n5(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getAdminBlogPostBySlug(arg0: string): Promise<AdminBlogPost | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAdminBlogPostBySlug(arg0);
+                return from_candid_opt_n5(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAdminBlogPostBySlug(arg0);
+            return from_candid_opt_n5(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getAggregateRating(arg0: string): Promise<AggregateRating> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAggregateRating(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAggregateRating(arg0);
+            return result;
+        }
+    }
+    async getAllAdminBlogPosts(): Promise<Array<AdminBlogPost>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllAdminBlogPosts();
+                return from_candid_vec_n11(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllAdminBlogPosts();
+            return from_candid_vec_n11(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getAllApprovedPhotos(): Promise<Array<TrekPhoto>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllApprovedPhotos();
+                return from_candid_vec_n12(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllApprovedPhotos();
+            return from_candid_vec_n12(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getAllBatchAvailability(): Promise<Array<BatchAvailabilityRecord>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllBatchAvailability();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllBatchAvailability();
+            return result;
+        }
+    }
+    async getAllBookings(): Promise<Array<Booking>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllBookings();
+                return from_candid_vec_n15(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllBookings();
+            return from_candid_vec_n15(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getAllPendingPhotos(): Promise<Array<TrekPhoto>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllPendingPhotos();
+                return from_candid_vec_n12(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllPendingPhotos();
+            return from_candid_vec_n12(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getAllWaitlistEntries(): Promise<Array<WaitlistEntryFull>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllWaitlistEntries();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllWaitlistEntries();
+            return result;
+        }
+    }
+    async getApprovedPhotos(arg0: string): Promise<Array<TrekPhoto>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getApprovedPhotos(arg0);
+                return from_candid_vec_n12(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getApprovedPhotos(arg0);
+            return from_candid_vec_n12(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getApprovedReviews(arg0: string): Promise<Array<FullReview>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getApprovedReviews(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getApprovedReviews(arg0);
             return result;
         }
     }
@@ -346,70 +801,224 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getBooking(arg0);
-                return from_candid_opt_n1(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n20(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getBooking(arg0);
-            return from_candid_opt_n1(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n20(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getCertificate(arg0: string): Promise<TrekCertificate | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCertificate(arg0);
+                return from_candid_opt_n21(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCertificate(arg0);
+            return from_candid_opt_n21(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getNotifications(): Promise<Array<Notification>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getNotifications();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getNotifications();
+            return result;
+        }
+    }
+    async getPackage(arg0: string): Promise<Package | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getPackage(arg0);
+                return from_candid_opt_n22(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getPackage(arg0);
+            return from_candid_opt_n22(this._uploadFile, this._downloadFile, result);
         }
     }
     async getPackageById(arg0: string): Promise<Package | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getPackageById(arg0);
-                return from_candid_opt_n6(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n22(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getPackageById(arg0);
-            return from_candid_opt_n6(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n22(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getPendingReviews(): Promise<Array<FullReview>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getPendingReviews();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getPendingReviews();
+            return result;
+        }
+    }
+    async getPublishedAdminBlogPosts(): Promise<Array<AdminBlogPost>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getPublishedAdminBlogPosts();
+                return from_candid_vec_n11(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getPublishedAdminBlogPosts();
+            return from_candid_vec_n11(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getRecentViewers(arg0: string): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getRecentViewers(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getRecentViewers(arg0);
+            return result;
+        }
+    }
+    async getSeatAvailability(arg0: string, arg1: string): Promise<BatchAvailability> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getSeatAvailability(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getSeatAvailability(arg0, arg1);
+            return result;
         }
     }
     async getTrek(arg0: string): Promise<Trek | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getTrek(arg0);
-                return from_candid_opt_n7(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n23(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getTrek(arg0);
-            return from_candid_opt_n7(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n23(this._uploadFile, this._downloadFile, result);
         }
     }
     async getUserBookings(arg0: string): Promise<Array<Booking>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getUserBookings(arg0);
-                return from_candid_vec_n8(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n15(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getUserBookings(arg0);
-            return from_candid_vec_n8(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n15(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getUserCertificates(): Promise<Array<TrekCertificate>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getUserCertificates();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getUserCertificates();
+            return result;
+        }
+    }
+    async getWaitlistCount(arg0: string, arg1: string): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getWaitlistCount(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getWaitlistCount(arg0, arg1);
+            return result;
         }
     }
     async getYatra(arg0: string): Promise<Yatra | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getYatra(arg0);
-                return from_candid_opt_n9(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n24(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getYatra(arg0);
-            return from_candid_opt_n9(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n24(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async isAdmin(arg0: Principal): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.isAdmin(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.isAdmin(arg0);
+            return result;
+        }
+    }
+    async joinWaitlist(arg0: WaitlistInput): Promise<string> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.joinWaitlist(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.joinWaitlist(arg0);
+            return result;
         }
     }
     async listAllReviews(): Promise<Array<Review>> {
@@ -514,14 +1123,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.listUserBookings(arg0);
-                return from_candid_vec_n8(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n15(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.listUserBookings(arg0);
-            return from_candid_vec_n8(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n15(this._uploadFile, this._downloadFile, result);
         }
     }
     async listYatras(): Promise<Array<Yatra>> {
@@ -536,6 +1145,132 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.listYatras();
             return result;
+        }
+    }
+    async markNotificationRead(arg0: bigint): Promise<Result> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.markNotificationRead(arg0);
+                return from_candid_Result_n3(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.markNotificationRead(arg0);
+            return from_candid_Result_n3(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async markNotificationReadAuth(arg0: bigint): Promise<Result> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.markNotificationReadAuth(arg0);
+                return from_candid_Result_n3(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.markNotificationReadAuth(arg0);
+            return from_candid_Result_n3(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async markTrekCompleted(arg0: bigint, arg1: string, arg2: string, arg3: string, arg4: string, arg5: string, arg6: string): Promise<Result_2> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.markTrekCompleted(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+                return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.markTrekCompleted(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+            return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async notifyWaitlistBatch(arg0: string, arg1: string, arg2: string): Promise<Result_2> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.notifyWaitlistBatch(arg0, arg1, arg2);
+                return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.notifyWaitlistBatch(arg0, arg1, arg2);
+            return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async notifyWaitlistEntry(arg0: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.notifyWaitlistEntry(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.notifyWaitlistEntry(arg0);
+            return result;
+        }
+    }
+    async publishAdminBlogPost(arg0: bigint): Promise<Result> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.publishAdminBlogPost(arg0);
+                return from_candid_Result_n3(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.publishAdminBlogPost(arg0);
+            return from_candid_Result_n3(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async recordPageView(arg0: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.recordPageView(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.recordPageView(arg0);
+            return result;
+        }
+    }
+    async rejectReview(arg0: ReviewId): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.rejectReview(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.rejectReview(arg0);
+            return result;
+        }
+    }
+    async scheduleAdminBlogPost(arg0: bigint, arg1: bigint): Promise<Result> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.scheduleAdminBlogPost(arg0, arg1);
+                return from_candid_Result_n3(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.scheduleAdminBlogPost(arg0, arg1);
+            return from_candid_Result_n3(this._uploadFile, this._downloadFile, result);
         }
     }
     async searchTreks(arg0: string): Promise<Array<Trek>> {
@@ -566,6 +1301,48 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async submitReview(arg0: ReviewInput): Promise<Result_1> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.submitReview(arg0);
+                return from_candid_Result_1_n25(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.submitReview(arg0);
+            return from_candid_Result_1_n25(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async submitTrekPhoto(arg0: TrekPhotoInput): Promise<string> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.submitTrekPhoto(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.submitTrekPhoto(arg0);
+            return result;
+        }
+    }
+    async updateAdminBlogPost(arg0: bigint, arg1: string, arg2: string, arg3: string, arg4: string, arg5: string, arg6: string, arg7: string, arg8: Array<string>, arg9: string, arg10: string): Promise<Result> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateAdminBlogPost(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
+                return from_candid_Result_n3(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateAdminBlogPost(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
+            return from_candid_Result_n3(this._uploadFile, this._downloadFile, result);
+        }
+    }
     async updateBatchAvailability(arg0: string, arg1: bigint): Promise<boolean> {
         if (this.processError) {
             try {
@@ -594,26 +1371,106 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async upvoteReview(arg0: ReviewId): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.upvoteReview(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.upvoteReview(arg0);
+            return result;
+        }
+    }
 }
-function from_candid_BookingStatus_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _BookingStatus): BookingStatus {
-    return from_candid_variant_n5(_uploadFile, _downloadFile, value);
+function from_candid_AdminBlogPost_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _AdminBlogPost): AdminBlogPost {
+    return from_candid_record_n7(_uploadFile, _downloadFile, value);
 }
-function from_candid_Booking_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Booking): Booking {
-    return from_candid_record_n3(_uploadFile, _downloadFile, value);
+function from_candid_BlogPostStatus_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _BlogPostStatus): BlogPostStatus {
+    return from_candid_variant_n9(_uploadFile, _downloadFile, value);
 }
-function from_candid_opt_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Booking]): Booking | null {
-    return value.length === 0 ? null : from_candid_Booking_n2(_uploadFile, _downloadFile, value[0]);
+function from_candid_BookingStatus_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _BookingStatus): BookingStatus {
+    return from_candid_variant_n19(_uploadFile, _downloadFile, value);
 }
-function from_candid_opt_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Package]): Package | null {
+function from_candid_Booking_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Booking): Booking {
+    return from_candid_record_n17(_uploadFile, _downloadFile, value);
+}
+function from_candid_Result_1_n25(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Result_1): Result_1 {
+    return from_candid_variant_n26(_uploadFile, _downloadFile, value);
+}
+function from_candid_Result_2_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Result_2): Result_2 {
+    return from_candid_variant_n2(_uploadFile, _downloadFile, value);
+}
+function from_candid_Result_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Result): Result {
+    return from_candid_variant_n4(_uploadFile, _downloadFile, value);
+}
+function from_candid_TrekPhoto_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _TrekPhoto): TrekPhoto {
+    return from_candid_record_n14(_uploadFile, _downloadFile, value);
+}
+function from_candid_opt_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [bigint]): bigint | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Trek]): Trek | null {
+function from_candid_opt_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Booking]): Booking | null {
+    return value.length === 0 ? null : from_candid_Booking_n16(_uploadFile, _downloadFile, value[0]);
+}
+function from_candid_opt_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_TrekCertificate]): TrekCertificate | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Yatra]): Yatra | null {
+function from_candid_opt_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Package]): Package | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_record_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_opt_n23(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Trek]): Trek | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Yatra]): Yatra | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_AdminBlogPost]): AdminBlogPost | null {
+    return value.length === 0 ? null : from_candid_AdminBlogPost_n6(_uploadFile, _downloadFile, value[0]);
+}
+function from_candid_record_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    id: string;
+    status: string;
+    uploaderName: string;
+    isProfilePhoto: boolean;
+    approvedAt: [] | [bigint];
+    submittedAt: bigint;
+    storageUrl: string;
+    trekSlug: string;
+    caption: string;
+    uploaderEmail: string;
+    dateOfTrek: string;
+}): {
+    id: string;
+    status: string;
+    uploaderName: string;
+    isProfilePhoto: boolean;
+    approvedAt?: bigint;
+    submittedAt: bigint;
+    storageUrl: string;
+    trekSlug: string;
+    caption: string;
+    uploaderEmail: string;
+    dateOfTrek: string;
+} {
+    return {
+        id: value.id,
+        status: value.status,
+        uploaderName: value.uploaderName,
+        isProfilePhoto: value.isProfilePhoto,
+        approvedAt: record_opt_to_undefined(from_candid_opt_n10(_uploadFile, _downloadFile, value.approvedAt)),
+        submittedAt: value.submittedAt,
+        storageUrl: value.storageUrl,
+        trekSlug: value.trekSlug,
+        caption: value.caption,
+        uploaderEmail: value.uploaderEmail,
+        dateOfTrek: value.dateOfTrek
+    };
+}
+function from_candid_record_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     id: string;
     status: _BookingStatus;
     participants: Array<_ParticipantInput>;
@@ -648,7 +1505,7 @@ function from_candid_record_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint
 } {
     return {
         id: value.id,
-        status: from_candid_BookingStatus_n4(_uploadFile, _downloadFile, value.status),
+        status: from_candid_BookingStatus_n18(_uploadFile, _downloadFile, value.status),
         participants: value.participants,
         userId: value.userId,
         createdAt: value.createdAt,
@@ -664,7 +1521,61 @@ function from_candid_record_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint
         contactPhone: value.contactPhone
     };
 }
-function from_candid_variant_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    id: bigint;
+    heroImageUrl: string;
+    metaDescription: string;
+    status: _BlogPostStatus;
+    title: string;
+    focusKeyword: string;
+    content: string;
+    publishAt: [] | [bigint];
+    createdAt: bigint;
+    slug: string;
+    tags: Array<string>;
+    publishedAt: [] | [bigint];
+    author: string;
+    updatedAt: bigint;
+    excerpt: string;
+    category: string;
+}): {
+    id: bigint;
+    heroImageUrl: string;
+    metaDescription: string;
+    status: BlogPostStatus;
+    title: string;
+    focusKeyword: string;
+    content: string;
+    publishAt?: bigint;
+    createdAt: bigint;
+    slug: string;
+    tags: Array<string>;
+    publishedAt?: bigint;
+    author: string;
+    updatedAt: bigint;
+    excerpt: string;
+    category: string;
+} {
+    return {
+        id: value.id,
+        heroImageUrl: value.heroImageUrl,
+        metaDescription: value.metaDescription,
+        status: from_candid_BlogPostStatus_n8(_uploadFile, _downloadFile, value.status),
+        title: value.title,
+        focusKeyword: value.focusKeyword,
+        content: value.content,
+        publishAt: record_opt_to_undefined(from_candid_opt_n10(_uploadFile, _downloadFile, value.publishAt)),
+        createdAt: value.createdAt,
+        slug: value.slug,
+        tags: value.tags,
+        publishedAt: record_opt_to_undefined(from_candid_opt_n10(_uploadFile, _downloadFile, value.publishedAt)),
+        author: value.author,
+        updatedAt: value.updatedAt,
+        excerpt: value.excerpt,
+        category: value.category
+    };
+}
+function from_candid_variant_n19(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     Confirmed: null;
 } | {
     Cancelled: null;
@@ -675,8 +1586,82 @@ function from_candid_variant_n5(_uploadFile: (file: ExternalBlob) => Promise<Uin
 }): BookingStatus {
     return "Confirmed" in value ? BookingStatus.Confirmed : "Cancelled" in value ? BookingStatus.Cancelled : "Completed" in value ? BookingStatus.Completed : "Pending" in value ? BookingStatus.Pending : value;
 }
-function from_candid_vec_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Booking>): Array<Booking> {
-    return value.map((x)=>from_candid_Booking_n2(_uploadFile, _downloadFile, x));
+function from_candid_variant_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    ok: bigint;
+} | {
+    err: string;
+}): {
+    __kind__: "ok";
+    ok: bigint;
+} | {
+    __kind__: "err";
+    err: string;
+} {
+    return "ok" in value ? {
+        __kind__: "ok",
+        ok: value.ok
+    } : "err" in value ? {
+        __kind__: "err",
+        err: value.err
+    } : value;
+}
+function from_candid_variant_n26(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    ok: _ReviewId;
+} | {
+    err: string;
+}): {
+    __kind__: "ok";
+    ok: ReviewId;
+} | {
+    __kind__: "err";
+    err: string;
+} {
+    return "ok" in value ? {
+        __kind__: "ok",
+        ok: value.ok
+    } : "err" in value ? {
+        __kind__: "err",
+        err: value.err
+    } : value;
+}
+function from_candid_variant_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    ok: null;
+} | {
+    err: string;
+}): {
+    __kind__: "ok";
+    ok: null;
+} | {
+    __kind__: "err";
+    err: string;
+} {
+    return "ok" in value ? {
+        __kind__: "ok",
+        ok: value.ok
+    } : "err" in value ? {
+        __kind__: "err",
+        err: value.err
+    } : value;
+}
+function from_candid_variant_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    scheduled: null;
+} | {
+    published: null;
+} | {
+    draft: null;
+} | {
+    archived: null;
+}): BlogPostStatus {
+    return "scheduled" in value ? BlogPostStatus.scheduled : "published" in value ? BlogPostStatus.published : "draft" in value ? BlogPostStatus.draft : "archived" in value ? BlogPostStatus.archived : value;
+}
+function from_candid_vec_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_AdminBlogPost>): Array<AdminBlogPost> {
+    return value.map((x)=>from_candid_AdminBlogPost_n6(_uploadFile, _downloadFile, x));
+}
+function from_candid_vec_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_TrekPhoto>): Array<TrekPhoto> {
+    return value.map((x)=>from_candid_TrekPhoto_n13(_uploadFile, _downloadFile, x));
+}
+function from_candid_vec_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Booking>): Array<Booking> {
+    return value.map((x)=>from_candid_Booking_n16(_uploadFile, _downloadFile, x));
 }
 export interface CreateActorOptions {
     agent?: Agent;

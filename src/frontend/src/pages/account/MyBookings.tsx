@@ -1,3 +1,4 @@
+import { ReviewSubmissionForm } from "@/components/ReviewSubmissionForm";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "@tanstack/react-router";
@@ -11,6 +12,7 @@ import {
   Users,
 } from "lucide-react";
 import { motion } from "motion/react";
+import { useState } from "react";
 
 const upcomingBookings = [
   {
@@ -76,12 +78,39 @@ const statusStyles: Record<BookingStatus, { bg: string; text: string }> = {
 type UpcomingBooking = (typeof upcomingBookings)[0];
 type PastBooking = (typeof pastBookings)[0];
 
+function getTrekSlug(trekName: string): string {
+  return trekName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+function hasReviewed(bookingId: string): boolean {
+  try {
+    return localStorage.getItem(`reviewed_${bookingId}`) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function markReviewed(bookingId: string): void {
+  try {
+    localStorage.setItem(`reviewed_${bookingId}`, "true");
+  } catch {
+    // ignore
+  }
+}
+
 function BookingCard({
   booking,
   variant,
 }: { booking: UpcomingBooking | PastBooking; variant: "upcoming" | "past" }) {
   const style = statusStyles[booking.status];
   const daysLeft = "daysLeft" in booking ? booking.daysLeft : null;
+  const [showReview, setShowReview] = useState(false);
+  const [alreadyReviewed, setAlreadyReviewed] = useState(() =>
+    hasReviewed(booking.id),
+  );
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -208,18 +237,47 @@ function BookingCard({
               <Download className="w-3.5 h-3.5 mr-1.5" />
               Download Certificate
             </Button>
-            <Button
-              size="sm"
-              className="text-xs font-semibold text-white"
-              style={{
-                background: "#145C38",
-                fontFamily: "var(--gt-font-label)",
-              }}
-              data-ocid="my_bookings.past.write_review_button"
-            >
-              <Star className="w-3.5 h-3.5 mr-1.5" />
-              Write Review
-            </Button>
+            {alreadyReviewed ? (
+              <span
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold"
+                style={{
+                  background: "#f0fdf4",
+                  color: "#145C38",
+                  fontFamily: "var(--gt-font-label)",
+                }}
+                data-ocid="my_bookings.past.review_submitted_badge"
+              >
+                <Star className="w-3 h-3" fill="#F4A623" color="#F4A623" />
+                Review Submitted
+              </span>
+            ) : (
+              <Button
+                size="sm"
+                className="text-xs font-semibold"
+                style={{
+                  background: "#F4A623",
+                  color: "#0A2E1A",
+                  fontFamily: "var(--gt-font-label)",
+                }}
+                onClick={() => setShowReview(true)}
+                data-ocid="my_bookings.past.write_review_button"
+              >
+                <Star className="w-3.5 h-3.5 mr-1.5" />
+                Write Review
+              </Button>
+            )}
+            {showReview && (
+              <ReviewSubmissionForm
+                trekSlug={getTrekSlug(booking.trek)}
+                trekName={booking.trek}
+                onClose={() => setShowReview(false)}
+                onSuccess={() => {
+                  markReviewed(booking.id);
+                  setAlreadyReviewed(true);
+                  setShowReview(false);
+                }}
+              />
+            )}
           </>
         )}
       </div>

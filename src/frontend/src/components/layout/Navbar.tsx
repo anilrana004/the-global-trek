@@ -2,6 +2,9 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
 import { Menu, Mountain, Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useLanguage } from "../../contexts/LanguageContext";
+import { NotificationBell } from "../NotificationBell";
+import { LanguageToggle } from "../ui/LanguageToggle";
 
 const uttarakhandTreks = [
   { label: "Chopta Tungnath", slug: "chopta-tungnath" },
@@ -85,6 +88,7 @@ const mobileCategories = [
 ];
 
 export function Navbar() {
+  const { t } = useLanguage();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
@@ -268,7 +272,7 @@ export function Navbar() {
               className="font-label text-sm text-white/80 hover:text-white transition-colors tracking-wide"
               data-ocid="navbar.explore_link"
             >
-              Explore
+              {t("nav_explore")}
             </Link>
             {/* Treks mega-menu trigger */}
             <div
@@ -359,6 +363,30 @@ export function Navbar() {
                         {item.label}
                       </Link>
                     ))}
+                    <div
+                      className="mt-3 pt-3 border-t"
+                      style={{ borderColor: "rgba(255,255,255,0.08)" }}
+                    >
+                      <Link
+                        to="/availability"
+                        className="flex items-center gap-2 py-1 text-sm font-semibold transition-colors"
+                        style={{ color: "#2ECC71" }}
+                        onClick={() => setMegaOpen(false)}
+                        data-ocid="navbar.live_availability_link"
+                      >
+                        <span className="relative flex h-2 w-2">
+                          <span
+                            className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                            style={{ background: "#2ECC71" }}
+                          />
+                          <span
+                            className="relative inline-flex rounded-full h-2 w-2"
+                            style={{ background: "#2ECC71" }}
+                          />
+                        </span>
+                        Live Availability
+                      </Link>
+                    </div>
                   </div>
                 </div>
               )}
@@ -368,32 +396,34 @@ export function Navbar() {
               className="font-label text-sm text-white/80 hover:text-white transition-colors tracking-wide"
               data-ocid="navbar.yatra_link"
             >
-              Yatra
+              {t("nav_yatra")}
             </Link>
             <Link
               to="/packages"
               className="font-label text-sm text-white/80 hover:text-white transition-colors tracking-wide"
               data-ocid="navbar.packages_link"
             >
-              Packages
+              {t("nav_packages")}
             </Link>
             <Link
               to="/blog"
               className="font-label text-sm text-white/80 hover:text-white transition-colors tracking-wide"
               data-ocid="navbar.blog_link"
             >
-              Blog
+              {t("nav_blog")}
             </Link>
             <Link
               to="/contact"
               className="font-label text-sm text-white/80 hover:text-white transition-colors tracking-wide"
               data-ocid="navbar.contact_link"
             >
-              Contact
+              {t("nav_contact")}
             </Link>
           </div>
 
           <div className="flex items-center gap-3">
+            <LanguageToggle />
+            <NotificationBell />
             <button
               type="button"
               className="text-white/70 hover:text-white transition-colors p-2"
@@ -410,7 +440,7 @@ export function Navbar() {
                 style={{ background: "#F4A623", color: "#0A2E1A" }}
                 data-ocid="navbar.book_now_button"
               >
-                Book Now
+                {t("nav_book_now")}
               </Button>
             </Link>
           </div>
@@ -433,7 +463,7 @@ export function Navbar() {
               </span>
             </Link>
             <div className="flex items-center gap-3">
-              <span className="text-white/70 text-lg">🔔</span>
+              <NotificationBell />
               <button
                 type="button"
                 className="text-white p-1"
@@ -501,6 +531,7 @@ export function Navbar() {
               { label: "Packages", to: "/packages" },
               { label: "Gear Rental", to: "/gear-rental" },
               { label: "Blog", to: "/blog" },
+              { label: "Live Availability", to: "/availability" },
               { label: "About Us", to: "/about" },
               { label: "Contact", to: "/contact" },
             ].map((link) => (
@@ -514,13 +545,17 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
+            <div className="mt-6 flex items-center justify-between">
+              <span className="text-white/60 text-sm">Language / भाषा</span>
+              <LanguageToggle />
+            </div>
             <Link to="/contact" onClick={() => setMobileOpen(false)}>
               <Button
-                className="mt-6 w-full font-label text-sm tracking-widest uppercase rounded-full"
+                className="mt-4 w-full font-label text-sm tracking-widest uppercase rounded-full"
                 style={{ background: "#F4A623", color: "#0A2E1A" }}
                 data-ocid="navbar.mobile.book_now_button"
               >
-                Book Now
+                {t("nav_book_now")}
               </Button>
             </Link>
           </nav>

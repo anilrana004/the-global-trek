@@ -254,3 +254,89 @@ export function useGetUserBookings(_email: string) {
     enabled: !!actor && !isFetching && !!_email,
   });
 }
+export function useGetAllApprovedPhotos() {
+  const { actor, isFetching } = useActor(createActor);
+  return useQuery({
+    queryKey: ["approvedPhotos"],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        return await actor.getAllApprovedPhotos();
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching,
+    staleTime: 1000 * 60 * 2,
+  });
+}
+
+export function useGetApprovedPhotosByTrek(trekSlug: string) {
+  const { actor, isFetching } = useActor(createActor);
+  return useQuery({
+    queryKey: ["approvedPhotosByTrek", trekSlug],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        return await actor.getApprovedPhotos(trekSlug);
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching && !!trekSlug,
+    staleTime: 1000 * 60 * 2,
+  });
+}
+
+export function useGetSeatAvailability(trekSlug: string, batchDate: string) {
+  const { actor, isFetching } = useActor(createActor);
+  return useQuery({
+    queryKey: ["seatAvailability", trekSlug, batchDate],
+    queryFn: async () => {
+      if (!actor) return null;
+      try {
+        return await actor.getSeatAvailability(trekSlug, batchDate);
+      } catch {
+        return null;
+      }
+    },
+    enabled: !!actor && !isFetching && !!trekSlug && !!batchDate,
+    refetchInterval: 30000,
+    staleTime: 20000,
+  });
+}
+
+export function useJoinWaitlist() {
+  const { actor } = useActor(createActor);
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (
+      input: Parameters<NonNullable<typeof actor>["joinWaitlist"]>[0],
+    ) => {
+      if (!actor) throw new Error("Backend not available");
+      return actor.joinWaitlist(input);
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["seatAvailability", variables.trekSlug, variables.batchDate],
+      });
+    },
+  });
+}
+
+export function useSubmitTrekPhoto() {
+  const { actor } = useActor(createActor);
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (
+      input: Parameters<NonNullable<typeof actor>["submitTrekPhoto"]>[0],
+    ) => {
+      if (!actor) throw new Error("Backend not available");
+      return actor.submitTrekPhoto(input);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["approvedPhotos"] });
+      queryClient.invalidateQueries({ queryKey: ["approvedPhotosByTrek"] });
+    },
+  });
+}
