@@ -43,14 +43,16 @@ type Review =
    userId: text;
    verified: bool;
  };
-type Participant = 
+type ParticipantInput = 
  record {
-   dateOfBirth: text;
+   age: nat;
    email: text;
-   emergencyContact: text;
+   emergencyContactName: text;
+   emergencyContactPhone: text;
    firstName: text;
    gender: text;
-   govtId: text;
+   govtIdNumber: text;
+   govtIdType: text;
    lastName: text;
    medicalConditions: text;
    mobile: text;
@@ -77,6 +79,13 @@ type GearItem =
    pricePerDay: nat;
    spec: text;
  };
+type BookingStatus = 
+ variant {
+   Cancelled;
+   Completed;
+   Confirmed;
+   Pending;
+ };
 type BookingInquiry = 
  record {
    email: text;
@@ -88,16 +97,33 @@ type BookingInquiry =
    specialRequirements: text;
    trekInterest: text;
  };
+type BookingInput = 
+ record {
+   addOns: AddOns;
+   advanceAmount: nat;
+   batchDate: text;
+   participants: vec ParticipantInput;
+   paymentType: text;
+   promoCode: text;
+   totalAmount: nat;
+   trekSlug: text;
+ };
 type Booking = 
  record {
-   addOns: vec text;
-   batchId: text;
+   addOns: AddOns;
+   advanceAmount: nat;
+   batchDate: text;
+   contactEmail: text;
+   contactPhone: text;
    createdAt: int;
    id: text;
-   participants: vec Participant;
-   status: text;
+   paidAmount: nat;
+   participants: vec ParticipantInput;
+   paymentType: text;
+   promoCode: text;
+   status: BookingStatus;
    totalAmount: nat;
-   trekId: text;
+   trekSlug: text;
    userId: text;
  };
 type BlogPost = 
@@ -108,6 +134,16 @@ type BlogPost =
    id: text;
    imageQuery: text;
    title: text;
+ };
+type BatchAvailability = 
+ record {
+   availableSeats: nat;
+   batchDate: text;
+   batchType: text;
+   bookedSeats: nat;
+   price: nat;
+   totalSeats: nat;
+   trekSlug: text;
  };
 type Batch = 
  record {
@@ -120,12 +156,27 @@ type Batch =
    startDate: text;
    trekId: text;
  };
+type AddOns = 
+ record {
+   gearBoots: bool;
+   gearSleepingBag: bool;
+   gearTent: bool;
+   mule: bool;
+   muleDays: nat;
+   porter: bool;
+   porterDays: nat;
+   travelInsurance: bool;
+ };
 service : {
-  createBooking: (booking: Booking) -> (text);
+  cancelBooking: (bookingId: text, _reason: text) -> (bool);
+  createBooking: (input: BookingInput) -> (text);
   createReview: (review: Review) -> (text);
+  getAvailableSeats: (trekSlug: text, batchDate: text) -> (nat) query;
+  getBatchAvailability: (trekSlug: text) -> (vec BatchAvailability) query;
   getBooking: (bookingId: text) -> (opt Booking) query;
   getPackageById: (packageId: text) -> (opt Package) query;
   getTrek: (id: text) -> (opt Trek) query;
+  getUserBookings: (contactEmail: text) -> (vec Booking) query;
   getYatra: (yatraId: text) -> (opt Yatra) query;
   listAllReviews: () -> (vec Review) query;
   listBatches: (trekId: text) -> (vec Batch) query;
@@ -139,4 +190,5 @@ service : {
   searchTreks: (searchTerm: text) -> (vec Trek) query;
   submitBookingInquiry: (inquiry: BookingInquiry) -> (text);
   updateBatchAvailability: (batchId: text, seatsBooked: nat) -> (bool);
+  updatePaymentStatus: (bookingId: text, paidAmount: nat) -> (bool);
 }

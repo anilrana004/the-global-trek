@@ -8,27 +8,38 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
-export const Participant = IDL.Record({
-  'dateOfBirth' : IDL.Text,
+export const ParticipantInput = IDL.Record({
+  'age' : IDL.Nat,
+  'govtIdType' : IDL.Text,
   'medicalConditions' : IDL.Text,
-  'emergencyContact' : IDL.Text,
-  'govtId' : IDL.Text,
   'email' : IDL.Text,
   'gender' : IDL.Text,
+  'emergencyContactPhone' : IDL.Text,
+  'emergencyContactName' : IDL.Text,
   'mobile' : IDL.Text,
   'lastName' : IDL.Text,
+  'govtIdNumber' : IDL.Text,
   'firstName' : IDL.Text,
 });
-export const Booking = IDL.Record({
-  'id' : IDL.Text,
-  'status' : IDL.Text,
-  'participants' : IDL.Vec(Participant),
-  'userId' : IDL.Text,
-  'trekId' : IDL.Text,
-  'createdAt' : IDL.Int,
+export const AddOns = IDL.Record({
+  'gearTent' : IDL.Bool,
+  'gearBoots' : IDL.Bool,
+  'porterDays' : IDL.Nat,
+  'mule' : IDL.Bool,
+  'muleDays' : IDL.Nat,
+  'gearSleepingBag' : IDL.Bool,
+  'travelInsurance' : IDL.Bool,
+  'porter' : IDL.Bool,
+});
+export const BookingInput = IDL.Record({
+  'participants' : IDL.Vec(ParticipantInput),
+  'promoCode' : IDL.Text,
+  'advanceAmount' : IDL.Nat,
   'totalAmount' : IDL.Nat,
-  'addOns' : IDL.Vec(IDL.Text),
-  'batchId' : IDL.Text,
+  'addOns' : AddOns,
+  'trekSlug' : IDL.Text,
+  'paymentType' : IDL.Text,
+  'batchDate' : IDL.Text,
 });
 export const Review = IDL.Record({
   'id' : IDL.Text,
@@ -41,6 +52,38 @@ export const Review = IDL.Record({
   'trekDate' : IDL.Text,
   'rating' : IDL.Nat,
   'helpful' : IDL.Nat,
+});
+export const BatchAvailability = IDL.Record({
+  'totalSeats' : IDL.Nat,
+  'bookedSeats' : IDL.Nat,
+  'availableSeats' : IDL.Nat,
+  'trekSlug' : IDL.Text,
+  'price' : IDL.Nat,
+  'batchDate' : IDL.Text,
+  'batchType' : IDL.Text,
+});
+export const BookingStatus = IDL.Variant({
+  'Confirmed' : IDL.Null,
+  'Cancelled' : IDL.Null,
+  'Completed' : IDL.Null,
+  'Pending' : IDL.Null,
+});
+export const Booking = IDL.Record({
+  'id' : IDL.Text,
+  'status' : BookingStatus,
+  'participants' : IDL.Vec(ParticipantInput),
+  'userId' : IDL.Text,
+  'createdAt' : IDL.Int,
+  'promoCode' : IDL.Text,
+  'advanceAmount' : IDL.Nat,
+  'totalAmount' : IDL.Nat,
+  'addOns' : AddOns,
+  'trekSlug' : IDL.Text,
+  'contactEmail' : IDL.Text,
+  'paymentType' : IDL.Text,
+  'paidAmount' : IDL.Nat,
+  'batchDate' : IDL.Text,
+  'contactPhone' : IDL.Text,
 });
 export const Package = IDL.Record({
   'id' : IDL.Text,
@@ -122,11 +165,19 @@ export const BookingInquiry = IDL.Record({
 });
 
 export const idlService = IDL.Service({
-  'createBooking' : IDL.Func([Booking], [IDL.Text], []),
+  'cancelBooking' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], []),
+  'createBooking' : IDL.Func([BookingInput], [IDL.Text], []),
   'createReview' : IDL.Func([Review], [IDL.Text], []),
+  'getAvailableSeats' : IDL.Func([IDL.Text, IDL.Text], [IDL.Nat], ['query']),
+  'getBatchAvailability' : IDL.Func(
+      [IDL.Text],
+      [IDL.Vec(BatchAvailability)],
+      ['query'],
+    ),
   'getBooking' : IDL.Func([IDL.Text], [IDL.Opt(Booking)], ['query']),
   'getPackageById' : IDL.Func([IDL.Text], [IDL.Opt(Package)], ['query']),
   'getTrek' : IDL.Func([IDL.Text], [IDL.Opt(Trek)], ['query']),
+  'getUserBookings' : IDL.Func([IDL.Text], [IDL.Vec(Booking)], ['query']),
   'getYatra' : IDL.Func([IDL.Text], [IDL.Opt(Yatra)], ['query']),
   'listAllReviews' : IDL.Func([], [IDL.Vec(Review)], ['query']),
   'listBatches' : IDL.Func([IDL.Text], [IDL.Vec(Batch)], ['query']),
@@ -140,32 +191,44 @@ export const idlService = IDL.Service({
   'searchTreks' : IDL.Func([IDL.Text], [IDL.Vec(Trek)], ['query']),
   'submitBookingInquiry' : IDL.Func([BookingInquiry], [IDL.Text], []),
   'updateBatchAvailability' : IDL.Func([IDL.Text, IDL.Nat], [IDL.Bool], []),
+  'updatePaymentStatus' : IDL.Func([IDL.Text, IDL.Nat], [IDL.Bool], []),
 });
 
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
-  const Participant = IDL.Record({
-    'dateOfBirth' : IDL.Text,
+  const ParticipantInput = IDL.Record({
+    'age' : IDL.Nat,
+    'govtIdType' : IDL.Text,
     'medicalConditions' : IDL.Text,
-    'emergencyContact' : IDL.Text,
-    'govtId' : IDL.Text,
     'email' : IDL.Text,
     'gender' : IDL.Text,
+    'emergencyContactPhone' : IDL.Text,
+    'emergencyContactName' : IDL.Text,
     'mobile' : IDL.Text,
     'lastName' : IDL.Text,
+    'govtIdNumber' : IDL.Text,
     'firstName' : IDL.Text,
   });
-  const Booking = IDL.Record({
-    'id' : IDL.Text,
-    'status' : IDL.Text,
-    'participants' : IDL.Vec(Participant),
-    'userId' : IDL.Text,
-    'trekId' : IDL.Text,
-    'createdAt' : IDL.Int,
+  const AddOns = IDL.Record({
+    'gearTent' : IDL.Bool,
+    'gearBoots' : IDL.Bool,
+    'porterDays' : IDL.Nat,
+    'mule' : IDL.Bool,
+    'muleDays' : IDL.Nat,
+    'gearSleepingBag' : IDL.Bool,
+    'travelInsurance' : IDL.Bool,
+    'porter' : IDL.Bool,
+  });
+  const BookingInput = IDL.Record({
+    'participants' : IDL.Vec(ParticipantInput),
+    'promoCode' : IDL.Text,
+    'advanceAmount' : IDL.Nat,
     'totalAmount' : IDL.Nat,
-    'addOns' : IDL.Vec(IDL.Text),
-    'batchId' : IDL.Text,
+    'addOns' : AddOns,
+    'trekSlug' : IDL.Text,
+    'paymentType' : IDL.Text,
+    'batchDate' : IDL.Text,
   });
   const Review = IDL.Record({
     'id' : IDL.Text,
@@ -178,6 +241,38 @@ export const idlFactory = ({ IDL }) => {
     'trekDate' : IDL.Text,
     'rating' : IDL.Nat,
     'helpful' : IDL.Nat,
+  });
+  const BatchAvailability = IDL.Record({
+    'totalSeats' : IDL.Nat,
+    'bookedSeats' : IDL.Nat,
+    'availableSeats' : IDL.Nat,
+    'trekSlug' : IDL.Text,
+    'price' : IDL.Nat,
+    'batchDate' : IDL.Text,
+    'batchType' : IDL.Text,
+  });
+  const BookingStatus = IDL.Variant({
+    'Confirmed' : IDL.Null,
+    'Cancelled' : IDL.Null,
+    'Completed' : IDL.Null,
+    'Pending' : IDL.Null,
+  });
+  const Booking = IDL.Record({
+    'id' : IDL.Text,
+    'status' : BookingStatus,
+    'participants' : IDL.Vec(ParticipantInput),
+    'userId' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'promoCode' : IDL.Text,
+    'advanceAmount' : IDL.Nat,
+    'totalAmount' : IDL.Nat,
+    'addOns' : AddOns,
+    'trekSlug' : IDL.Text,
+    'contactEmail' : IDL.Text,
+    'paymentType' : IDL.Text,
+    'paidAmount' : IDL.Nat,
+    'batchDate' : IDL.Text,
+    'contactPhone' : IDL.Text,
   });
   const Package = IDL.Record({
     'id' : IDL.Text,
@@ -259,11 +354,19 @@ export const idlFactory = ({ IDL }) => {
   });
   
   return IDL.Service({
-    'createBooking' : IDL.Func([Booking], [IDL.Text], []),
+    'cancelBooking' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], []),
+    'createBooking' : IDL.Func([BookingInput], [IDL.Text], []),
     'createReview' : IDL.Func([Review], [IDL.Text], []),
+    'getAvailableSeats' : IDL.Func([IDL.Text, IDL.Text], [IDL.Nat], ['query']),
+    'getBatchAvailability' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(BatchAvailability)],
+        ['query'],
+      ),
     'getBooking' : IDL.Func([IDL.Text], [IDL.Opt(Booking)], ['query']),
     'getPackageById' : IDL.Func([IDL.Text], [IDL.Opt(Package)], ['query']),
     'getTrek' : IDL.Func([IDL.Text], [IDL.Opt(Trek)], ['query']),
+    'getUserBookings' : IDL.Func([IDL.Text], [IDL.Vec(Booking)], ['query']),
     'getYatra' : IDL.Func([IDL.Text], [IDL.Opt(Yatra)], ['query']),
     'listAllReviews' : IDL.Func([], [IDL.Vec(Review)], ['query']),
     'listBatches' : IDL.Func([IDL.Text], [IDL.Vec(Batch)], ['query']),
@@ -277,6 +380,7 @@ export const idlFactory = ({ IDL }) => {
     'searchTreks' : IDL.Func([IDL.Text], [IDL.Vec(Trek)], ['query']),
     'submitBookingInquiry' : IDL.Func([BookingInquiry], [IDL.Text], []),
     'updateBatchAvailability' : IDL.Func([IDL.Text, IDL.Nat], [IDL.Bool], []),
+    'updatePaymentStatus' : IDL.Func([IDL.Text, IDL.Nat], [IDL.Bool], []),
   });
 };
 

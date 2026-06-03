@@ -1,4 +1,25 @@
-// Version: 1.0.0
+// Version: 3.0.0
+type AddOns__393889461 =
+  {
+    gearBoots : Bool;
+    gearSleepingBag : Bool;
+    gearTent : Bool;
+    mule : Bool;
+    muleDays : Nat;
+    porter : Bool;
+    porterDays : Nat;
+    travelInsurance : Bool
+  };
+type BatchAvailability__308946274 =
+  {
+    availableSeats : Nat;
+    batchDate : Text;
+    batchType : Text;
+    bookedSeats : Nat;
+    price : Nat;
+    totalSeats : Nat;
+    trekSlug : Text
+  };
 type Batch__564540074 =
   {
     basePrice : Nat;
@@ -30,18 +51,28 @@ type BookingInquiry__450314208 =
     specialRequirements : Text;
     trekInterest : Text
   };
+type BookingStatus__163633778 =
+  {#Cancelled; #Completed; #Confirmed; #Pending};
 type Booking__519012722 =
   {
-    addOns : [Text];
-    batchId : Text;
+    addOns : AddOns__393889461;
+    advanceAmount : Nat;
+    batchDate : Text;
+    contactEmail : Text;
+    contactPhone : Text;
     createdAt : Int;
     id : Text;
-    participants : [Participant__24172182];
-    status : Text;
+    paidAmount : Nat;
+    participants : [ParticipantInput__844980839];
+    paymentType : Text;
+    promoCode : Text;
+    status : BookingStatus__163633778;
     totalAmount : Nat;
-    trekId : Text;
+    trekSlug : Text;
     userId : Text
   };
+type Data__80296667<K, V> =
+  {var count : Nat__1040412405; kvs : [var ?(K, V)]};
 type GearItem__490498561 =
   {
     brand : Text;
@@ -52,8 +83,44 @@ type GearItem__490498561 =
     pricePerDay : Nat;
     spec : Text
   };
+type Internal__41346355<K, V> =
+  {children : [var ?Node__1000929467<K, V>]; data : Data__80296667<K, V>};
+type Leaf__712614010<K, V> = {data : Data__80296667<K, V>};
+type List__529703492<T> =
+  {
+    var blockIndex : Nat__1040412405;
+    var blocks : [var [var ?T]];
+    var elementIndex : Nat__1040412405
+  };
+type List__560604548<T> = List__529703492<T>;
 type Nat__1040412405 = Nat__920180692;
 type Nat__920180692 = Nat;
+type Node__1000929467<K, V> =
+  {#internal : Internal__41346355<K, V>; #leaf : Leaf__712614010<K, V>};
+type OldBooking__221110599 =
+  {
+    addOns : [Text];
+    batchId : Text;
+    createdAt : Int;
+    id : Text;
+    participants : [OldParticipant__141780686];
+    status : Text;
+    totalAmount : Nat;
+    trekId : Text;
+    userId : Text
+  };
+type OldParticipant__141780686 =
+  {
+    dateOfBirth : Text;
+    email : Text;
+    emergencyContact : Text;
+    firstName : Text;
+    gender : Text;
+    govtId : Text;
+    lastName : Text;
+    medicalConditions : Text;
+    mobile : Text
+  };
 type Package__226567178 =
   {
     category : Text;
@@ -66,14 +133,16 @@ type Package__226567178 =
     name : Text;
     price : Nat
   };
-type Participant__24172182 =
+type ParticipantInput__844980839 =
   {
-    dateOfBirth : Text;
+    age : Nat;
     email : Text;
-    emergencyContact : Text;
+    emergencyContactName : Text;
+    emergencyContactPhone : Text;
     firstName : Text;
     gender : Text;
-    govtId : Text;
+    govtIdNumber : Text;
+    govtIdType : Text;
     lastName : Text;
     medicalConditions : Text;
     mobile : Text
@@ -110,7 +179,19 @@ type Trek__857611341 =
     region : Text;
     startPoint : Text
   };
-actor {
+actor ({
+  stable _bookings :
+    {
+      var blockIndex : Nat__1040412405;
+      var blocks : [var [var ?Booking__519012722]];
+      var elementIndex : Nat__1040412405
+    };
+  stable batchAvailabilityMap :
+    {
+      var root : Node__1000929467<Text, BatchAvailability__308946274>;
+      var size : Nat__1040412405
+    };
+  stable batchAvailabilitySeed : [BatchAvailability__308946274];
   stable batchSeed : [Batch__564540074];
   stable batches :
     {
@@ -125,11 +206,11 @@ actor {
       var elementIndex : Nat__1040412405
     };
   stable blogSeed : [BlogPost__543622485];
-  stable bookings :
+  in bookings : List__560604548<OldBooking__221110599>;
+  stable bookingsMap :
     {
-      var blockIndex : Nat__1040412405;
-      var blocks : [var [var ?Booking__519012722]];
-      var elementIndex : Nat__1040412405
+      var root : Node__1000929467<Text, Booking__519012722>;
+      var size : Nat__1040412405
     };
   stable gearItems :
     {
@@ -166,4 +247,71 @@ actor {
       var blocks : [var [var ?Trek__857611341]];
       var elementIndex : Nat__1040412405
     }
-};
+}, {
+  stable _bookings :
+    {
+      var blockIndex : Nat__1040412405;
+      var blocks : [var [var ?Booking__519012722]];
+      var elementIndex : Nat__1040412405
+    };
+  stable batchAvailabilityMap :
+    {
+      var root : Node__1000929467<Text, BatchAvailability__308946274>;
+      var size : Nat__1040412405
+    };
+  stable batchAvailabilitySeed : [BatchAvailability__308946274];
+  stable batchSeed : [Batch__564540074];
+  stable batches :
+    {
+      var blockIndex : Nat__1040412405;
+      var blocks : [var [var ?Batch__564540074]];
+      var elementIndex : Nat__1040412405
+    };
+  stable blogPosts :
+    {
+      var blockIndex : Nat__1040412405;
+      var blocks : [var [var ?BlogPost__543622485]];
+      var elementIndex : Nat__1040412405
+    };
+  stable blogSeed : [BlogPost__543622485];
+  stable bookingsMap :
+    {
+      var root : Node__1000929467<Text, Booking__519012722>;
+      var size : Nat__1040412405
+    };
+  stable gearItems :
+    {
+      var blockIndex : Nat__1040412405;
+      var blocks : [var [var ?GearItem__490498561]];
+      var elementIndex : Nat__1040412405
+    };
+  stable gearSeed : [GearItem__490498561];
+  stable inquiries :
+    {
+      var blockIndex : Nat__1040412405;
+      var blocks : [var [var ?BookingInquiry__450314208]];
+      var elementIndex : Nat__1040412405
+    };
+  stable packageSeed : [Package__226567178];
+  stable packages :
+    {
+      var blockIndex : Nat__1040412405;
+      var blocks : [var [var ?Package__226567178]];
+      var elementIndex : Nat__1040412405
+    };
+  stable reviewSeed : [Review__422344017];
+  stable reviews :
+    {
+      var blockIndex : Nat__1040412405;
+      var blocks : [var [var ?Review__422344017]];
+      var elementIndex : Nat__1040412405
+    };
+  stable state : {var nextBookingSeq : Nat};
+  stable trekSeed : [Trek__857611341];
+  stable treks :
+    {
+      var blockIndex : Nat__1040412405;
+      var blocks : [var [var ?Trek__857611341]];
+      var elementIndex : Nat__1040412405
+    }
+});

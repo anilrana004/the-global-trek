@@ -1,5 +1,7 @@
+import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
 import { motion } from "motion/react";
+import { useState } from "react";
 
 const packages = [
   {
@@ -103,6 +105,7 @@ const packages = [
 export default function PackagesPage() {
   return (
     <div className="min-h-screen bg-background" data-ocid="packages.page">
+      {/* Hero */}
       <section
         className="pt-36 pb-20 px-4 text-center"
         style={{
@@ -113,17 +116,17 @@ export default function PackagesPage() {
           className="text-xs tracking-widest uppercase mb-4"
           style={{ color: "#2ECC71", fontFamily: "var(--gt-font-label)" }}
         >
-          Trek Packages
+          For Every Kind of Adventurer
         </p>
         <h1
           className="text-4xl md:text-5xl font-bold italic text-white mb-4"
           style={{ fontFamily: "var(--gt-font-display)" }}
         >
-          Customized Himalayan Experiences
+          Custom & Group Trek Packages
         </h1>
         <p className="text-white/70 text-lg max-w-xl mx-auto">
-          Something for every kind of adventurer \u2014 solo, family, corporate,
-          or fully custom.
+          Solo, family, corporate, school or fully bespoke — we craft the
+          perfect Himalayan experience for every kind of group.
         </p>
       </section>
 
@@ -187,6 +190,62 @@ export default function PackagesPage() {
         </div>
       </section>
 
+      {/* Why Package Section */}
+      <section
+        className="py-14 px-4 bg-card border-t border-border"
+        data-ocid="packages.why_section"
+      >
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-10">
+            <h2
+              className="text-3xl font-bold italic"
+              style={{
+                fontFamily: "var(--gt-font-display)",
+                color: "var(--foreground)",
+              }}
+            >
+              Package vs Individual Trek — Why Choose a Package?
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {[
+              {
+                icon: "💰",
+                title: "Better Value",
+                desc: "Group packages include exclusive campsites, professional facilitation, custom menus, and add-ons not available on standard batches.",
+              },
+              {
+                icon: "📅",
+                title: "Your Dates",
+                desc: "Don't fit a fixed batch? Private packages depart on your chosen date — weekend, holiday, or any date that works for your group.",
+              },
+              {
+                icon: "⭐",
+                title: "Bespoke Experience",
+                desc: "Tailored difficulty, route, meals, accommodation, activities, and photography — designed specifically for your group's needs.",
+              },
+            ].map((item) => (
+              <div
+                key={item.title}
+                className="text-center p-6 rounded-2xl border border-border bg-background"
+              >
+                <div className="text-3xl mb-3">{item.icon}</div>
+                <h3
+                  className="font-bold text-lg mb-2"
+                  style={{ fontFamily: "var(--gt-font-display)" }}
+                >
+                  {item.title}
+                </h3>
+                <p className="text-sm text-muted-foreground">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Custom Quote CTA */}
+      <CustomQuoteForm />
+
       <section className="py-10 px-4 bg-card border-t border-border">
         <div className="max-w-4xl mx-auto flex flex-wrap justify-center gap-8 text-center">
           {[
@@ -207,5 +266,138 @@ export default function PackagesPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+function CustomQuoteForm() {
+  const [submitted, setSubmitted] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", requirements: "" });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitted(true);
+  };
+
+  return (
+    <section
+      className="py-16 px-4"
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(26,122,76,0.08) 0%, rgba(232,150,58,0.05) 100%)",
+      }}
+      data-ocid="packages.custom_quote_section"
+    >
+      <div className="max-w-2xl mx-auto">
+        <div className="text-center mb-8">
+          <p
+            className="font-mono text-xs tracking-widest uppercase mb-3"
+            style={{ color: "#E8963A" }}
+          >
+            Can&apos;t find what you need?
+          </p>
+          <h2
+            className="text-3xl font-bold italic"
+            style={{ fontFamily: "var(--gt-font-display)" }}
+          >
+            Get a Custom Quote
+          </h2>
+          <p className="text-sm text-muted-foreground mt-2">
+            Tell us your dream trek — we&apos;ll build a custom itinerary and
+            quote in 24 hours.
+          </p>
+        </div>
+        {submitted ? (
+          <div
+            className="text-center py-12 px-6 rounded-2xl border border-border bg-card"
+            data-ocid="packages.quote_success_state"
+          >
+            <p className="text-4xl mb-3">✅</p>
+            <h3 className="font-bold text-lg mb-2">Request Received!</h3>
+            <p className="text-sm text-muted-foreground">
+              Our trek experts will get back to you within 24 hours with a
+              custom quote.
+            </p>
+          </div>
+        ) : (
+          <form
+            onSubmit={handleSubmit}
+            className="bg-card border border-border rounded-2xl p-8 space-y-5"
+            data-ocid="packages.custom_quote_form"
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label
+                  htmlFor="quote-name"
+                  className="block text-xs font-mono text-muted-foreground mb-1"
+                >
+                  FULL NAME
+                </label>
+                <input
+                  id="quote-name"
+                  type="text"
+                  required
+                  value={form.name}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, name: e.target.value }))
+                  }
+                  className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2"
+                  style={{ focusRingColor: "#1A7A4C" } as React.CSSProperties}
+                  placeholder="Your name"
+                  data-ocid="packages.quote_name_input"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="quote-email"
+                  className="block text-xs font-mono text-muted-foreground mb-1"
+                >
+                  EMAIL ADDRESS
+                </label>
+                <input
+                  id="quote-email"
+                  type="email"
+                  required
+                  value={form.email}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, email: e.target.value }))
+                  }
+                  className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2"
+                  placeholder="you@example.com"
+                  data-ocid="packages.quote_email_input"
+                />
+              </div>
+            </div>
+            <div>
+              <label
+                htmlFor="quote-req"
+                className="block text-xs font-mono text-muted-foreground mb-1"
+              >
+                YOUR REQUIREMENTS
+              </label>
+              <textarea
+                id="quote-req"
+                required
+                rows={4}
+                value={form.requirements}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, requirements: e.target.value }))
+                }
+                className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 resize-none"
+                placeholder="e.g. Corporate team of 25, want a 3-day Kedarkantha experience in December 2026, budget ₹15,000/person, need GST invoice..."
+                data-ocid="packages.quote_requirements_textarea"
+              />
+            </div>
+            <Button
+              type="submit"
+              className="w-full font-mono text-sm tracking-wider"
+              style={{ background: "#E8963A", color: "#0A0E14" }}
+              data-ocid="packages.quote_submit_button"
+            >
+              Send Custom Quote Request
+            </Button>
+          </form>
+        )}
+      </div>
+    </section>
   );
 }

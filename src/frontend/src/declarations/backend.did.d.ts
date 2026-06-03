@@ -10,6 +10,16 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface AddOns {
+  'gearTent' : boolean,
+  'gearBoots' : boolean,
+  'porterDays' : bigint,
+  'mule' : boolean,
+  'muleDays' : bigint,
+  'gearSleepingBag' : boolean,
+  'travelInsurance' : boolean,
+  'porter' : boolean,
+}
 export interface Batch {
   'id' : string,
   'endDate' : string,
@@ -19,6 +29,15 @@ export interface Batch {
   'basePrice' : bigint,
   'batchType' : string,
   'startDate' : string,
+}
+export interface BatchAvailability {
+  'totalSeats' : bigint,
+  'bookedSeats' : bigint,
+  'availableSeats' : bigint,
+  'trekSlug' : string,
+  'price' : bigint,
+  'batchDate' : string,
+  'batchType' : string,
 }
 export interface BlogPost {
   'id' : string,
@@ -30,14 +49,30 @@ export interface BlogPost {
 }
 export interface Booking {
   'id' : string,
-  'status' : string,
-  'participants' : Array<Participant>,
+  'status' : BookingStatus,
+  'participants' : Array<ParticipantInput>,
   'userId' : string,
-  'trekId' : string,
   'createdAt' : bigint,
+  'promoCode' : string,
+  'advanceAmount' : bigint,
   'totalAmount' : bigint,
-  'addOns' : Array<string>,
-  'batchId' : string,
+  'addOns' : AddOns,
+  'trekSlug' : string,
+  'contactEmail' : string,
+  'paymentType' : string,
+  'paidAmount' : bigint,
+  'batchDate' : string,
+  'contactPhone' : string,
+}
+export interface BookingInput {
+  'participants' : Array<ParticipantInput>,
+  'promoCode' : string,
+  'advanceAmount' : bigint,
+  'totalAmount' : bigint,
+  'addOns' : AddOns,
+  'trekSlug' : string,
+  'paymentType' : string,
+  'batchDate' : string,
 }
 export interface BookingInquiry {
   'trekInterest' : string,
@@ -49,6 +84,10 @@ export interface BookingInquiry {
   'groupSize' : string,
   'specialRequirements' : string,
 }
+export type BookingStatus = { 'Confirmed' : null } |
+  { 'Cancelled' : null } |
+  { 'Completed' : null } |
+  { 'Pending' : null };
 export interface GearItem {
   'id' : string,
   'name' : string,
@@ -69,15 +108,17 @@ export interface Package {
   'price' : bigint,
   'images' : Array<string>,
 }
-export interface Participant {
-  'dateOfBirth' : string,
+export interface ParticipantInput {
+  'age' : bigint,
+  'govtIdType' : string,
   'medicalConditions' : string,
-  'emergencyContact' : string,
-  'govtId' : string,
   'email' : string,
   'gender' : string,
+  'emergencyContactPhone' : string,
+  'emergencyContactName' : string,
   'mobile' : string,
   'lastName' : string,
+  'govtIdNumber' : string,
   'firstName' : string,
 }
 export interface Review {
@@ -123,11 +164,15 @@ export interface Yatra {
   'price' : string,
 }
 export interface _SERVICE {
-  'createBooking' : ActorMethod<[Booking], string>,
+  'cancelBooking' : ActorMethod<[string, string], boolean>,
+  'createBooking' : ActorMethod<[BookingInput], string>,
   'createReview' : ActorMethod<[Review], string>,
+  'getAvailableSeats' : ActorMethod<[string, string], bigint>,
+  'getBatchAvailability' : ActorMethod<[string], Array<BatchAvailability>>,
   'getBooking' : ActorMethod<[string], [] | [Booking]>,
   'getPackageById' : ActorMethod<[string], [] | [Package]>,
   'getTrek' : ActorMethod<[string], [] | [Trek]>,
+  'getUserBookings' : ActorMethod<[string], Array<Booking>>,
   'getYatra' : ActorMethod<[string], [] | [Yatra]>,
   'listAllReviews' : ActorMethod<[], Array<Review>>,
   'listBatches' : ActorMethod<[string], Array<Batch>>,
@@ -141,6 +186,7 @@ export interface _SERVICE {
   'searchTreks' : ActorMethod<[string], Array<Trek>>,
   'submitBookingInquiry' : ActorMethod<[BookingInquiry], string>,
   'updateBatchAvailability' : ActorMethod<[string, bigint], boolean>,
+  'updatePaymentStatus' : ActorMethod<[string, bigint], boolean>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

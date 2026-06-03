@@ -1,7 +1,12 @@
+import Migration "migration";
 import List "mo:core/List";
+import Map "mo:core/Map";
+import Int "mo:core/Int";
 import Nat "mo:core/Nat";
 import Text "mo:core/Text";
+import Time "mo:core/Time";
 
+(with migration = Migration.migrate)
 actor {
 
   // ── Types ──────────────────────────────────────────────────────────────
@@ -69,6 +74,49 @@ actor {
     batchType : Text;
   };
 
+  public type BookingStatus = {
+    #Pending;
+    #Confirmed;
+    #Completed;
+    #Cancelled;
+  };
+
+  public type ParticipantInput = {
+    firstName : Text;
+    lastName : Text;
+    age : Nat;
+    gender : Text;
+    mobile : Text;
+    email : Text;
+    emergencyContactName : Text;
+    emergencyContactPhone : Text;
+    medicalConditions : Text;
+    govtIdType : Text;
+    govtIdNumber : Text;
+  };
+
+  public type AddOns = {
+    porter : Bool;
+    mule : Bool;
+    travelInsurance : Bool;
+    gearSleepingBag : Bool;
+    gearTent : Bool;
+    gearBoots : Bool;
+    porterDays : Nat;
+    muleDays : Nat;
+  };
+
+  public type BookingInput = {
+    trekSlug : Text;
+    batchDate : Text;
+    participants : [ParticipantInput];
+    addOns : AddOns;
+    paymentType : Text;
+    promoCode : Text;
+    totalAmount : Nat;
+    advanceAmount : Nat;
+  };
+
   public type Participant = {
     firstName : Text;
     lastName : Text;
@@ -83,14 +131,30 @@ actor {
 
   public type Booking = {
     id : Text;
-    userId : Text;
-    trekId : Text;
-    batchId : Text;
-    participants : [Participant];
-    addOns : [Text];
+    trekSlug : Text;
+    batchDate : Text;
+    participants : [ParticipantInput];
+    addOns : AddOns;
     totalAmount : Nat;
-    status : Text;
+    advanceAmount : Nat;
+    paidAmount : Nat;
+    paymentType : Text;
+    promoCode : Text;
+    status : BookingStatus;
     createdAt : Int;
+    userId : Text;
+    contactEmail : Text;
+    contactPhone : Text;
+  };
+
+  public type BatchAvailability = {
+    trekSlug : Text;
+    batchDate : Text;
+    totalSeats : Nat;
+    bookedSeats : Nat;
+    availableSeats : Nat;
+    price : Nat;
+    batchType : Text;
   };
 
   public type GearItem = {
@@ -441,6 +505,81 @@ actor {
     },
   ];
 
+  // ── Batch availability seed ────────────────────────────────────────────
+
+  let batchAvailabilitySeed : [BatchAvailability] = [
+    // Kedarkantha
+    { trekSlug = "kedarkantha"; batchDate = "Dec 15, 2026"; totalSeats = 15; bookedSeats = 15; availableSeats = 0;  price = 8500;  batchType = "Regular" },
+    { trekSlug = "kedarkantha"; batchDate = "Dec 20, 2026"; totalSeats = 15; bookedSeats = 7;  availableSeats = 8;  price = 8500;  batchType = "Regular" },
+    { trekSlug = "kedarkantha"; batchDate = "Dec 25, 2026"; totalSeats = 15; bookedSeats = 3;  availableSeats = 12; price = 9500;  batchType = "Christmas Special" },
+    { trekSlug = "kedarkantha"; batchDate = "Dec 30, 2026"; totalSeats = 15; bookedSeats = 10; availableSeats = 5;  price = 10500; batchType = "New Year Eve" },
+    { trekSlug = "kedarkantha"; batchDate = "Jan 5, 2027";  totalSeats = 15; bookedSeats = 3;  availableSeats = 12; price = 8500;  batchType = "Regular" },
+    { trekSlug = "kedarkantha"; batchDate = "Jan 10, 2027"; totalSeats = 15; bookedSeats = 0;  availableSeats = 15; price = 8500;  batchType = "Regular" },
+    // Chopta Tungnath
+    { trekSlug = "chopta-tungnath"; batchDate = "Nov 5, 2026";  totalSeats = 12; bookedSeats = 4; availableSeats = 8;  price = 6500; batchType = "Regular" },
+    { trekSlug = "chopta-tungnath"; batchDate = "Nov 20, 2026"; totalSeats = 12; bookedSeats = 7; availableSeats = 5;  price = 6500; batchType = "Regular" },
+    { trekSlug = "chopta-tungnath"; batchDate = "Dec 10, 2026"; totalSeats = 12; bookedSeats = 2; availableSeats = 10; price = 7000; batchType = "Winter Special" },
+    { trekSlug = "chopta-tungnath"; batchDate = "Jan 8, 2027";  totalSeats = 12; bookedSeats = 0; availableSeats = 12; price = 7000; batchType = "Regular" },
+    { trekSlug = "chopta-tungnath"; batchDate = "Feb 5, 2027";  totalSeats = 12; bookedSeats = 3; availableSeats = 9;  price = 6500; batchType = "Regular" },
+    { trekSlug = "chopta-tungnath"; batchDate = "Mar 5, 2027";  totalSeats = 12; bookedSeats = 6; availableSeats = 6;  price = 6500; batchType = "Regular" },
+    // Har Ki Dun
+    { trekSlug = "har-ki-dun"; batchDate = "Apr 10, 2026"; totalSeats = 15; bookedSeats = 5;  availableSeats = 10; price = 9500; batchType = "Spring" },
+    { trekSlug = "har-ki-dun"; batchDate = "May 5, 2026";  totalSeats = 15; bookedSeats = 8;  availableSeats = 7;  price = 9500; batchType = "Regular" },
+    { trekSlug = "har-ki-dun"; batchDate = "Jun 2, 2026";  totalSeats = 15; bookedSeats = 12; availableSeats = 3;  price = 9500; batchType = "Regular" },
+    { trekSlug = "har-ki-dun"; batchDate = "Aug 5, 2026";  totalSeats = 15; bookedSeats = 4;  availableSeats = 11; price = 9500; batchType = "Regular" },
+    { trekSlug = "har-ki-dun"; batchDate = "Sep 10, 2026"; totalSeats = 15; bookedSeats = 9;  availableSeats = 6;  price = 9500; batchType = "Autumn" },
+    { trekSlug = "har-ki-dun"; batchDate = "Oct 5, 2026";  totalSeats = 15; bookedSeats = 6;  availableSeats = 9;  price = 9500; batchType = "Autumn" },
+    // Hampta Pass
+    { trekSlug = "hampta-pass"; batchDate = "Jun 10, 2026"; totalSeats = 15; bookedSeats = 6;  availableSeats = 9;  price = 11999; batchType = "Regular" },
+    { trekSlug = "hampta-pass"; batchDate = "Jun 25, 2026"; totalSeats = 15; bookedSeats = 9;  availableSeats = 6;  price = 11999; batchType = "Regular" },
+    { trekSlug = "hampta-pass"; batchDate = "Jul 10, 2026"; totalSeats = 15; bookedSeats = 11; availableSeats = 4;  price = 11999; batchType = "Monsoon Special" },
+    { trekSlug = "hampta-pass"; batchDate = "Jul 25, 2026"; totalSeats = 15; bookedSeats = 5;  availableSeats = 10; price = 11999; batchType = "Regular" },
+    { trekSlug = "hampta-pass"; batchDate = "Aug 10, 2026"; totalSeats = 15; bookedSeats = 3;  availableSeats = 12; price = 11999; batchType = "Regular" },
+    { trekSlug = "hampta-pass"; batchDate = "Sep 5, 2026";  totalSeats = 15; bookedSeats = 7;  availableSeats = 8;  price = 11999; batchType = "Autumn" },
+    // Sar Pass
+    { trekSlug = "sar-pass"; batchDate = "May 15, 2026"; totalSeats = 20; bookedSeats = 8;  availableSeats = 12; price = 10999; batchType = "Spring Snow" },
+    { trekSlug = "sar-pass"; batchDate = "Jun 1, 2026";  totalSeats = 20; bookedSeats = 15; availableSeats = 5;  price = 10999; batchType = "Regular" },
+    { trekSlug = "sar-pass"; batchDate = "Jun 15, 2026"; totalSeats = 20; bookedSeats = 20; availableSeats = 0;  price = 10999; batchType = "Regular" },
+    { trekSlug = "sar-pass"; batchDate = "Sep 10, 2026"; totalSeats = 20; bookedSeats = 6;  availableSeats = 14; price = 10999; batchType = "Autumn" },
+    { trekSlug = "sar-pass"; batchDate = "Sep 25, 2026"; totalSeats = 20; bookedSeats = 4;  availableSeats = 16; price = 10999; batchType = "Autumn" },
+    { trekSlug = "sar-pass"; batchDate = "Oct 10, 2026"; totalSeats = 20; bookedSeats = 2;  availableSeats = 18; price = 10999; batchType = "Autumn" },
+    // Kuari Pass
+    { trekSlug = "kuari-pass"; batchDate = "Apr 15, 2026"; totalSeats = 12; bookedSeats = 4; availableSeats = 8;  price = 10500; batchType = "Spring" },
+    { trekSlug = "kuari-pass"; batchDate = "May 10, 2026"; totalSeats = 12; bookedSeats = 7; availableSeats = 5;  price = 10500; batchType = "Regular" },
+    { trekSlug = "kuari-pass"; batchDate = "Jun 5, 2026";  totalSeats = 12; bookedSeats = 9; availableSeats = 3;  price = 10500; batchType = "Regular" },
+    { trekSlug = "kuari-pass"; batchDate = "Oct 10, 2026"; totalSeats = 12; bookedSeats = 5; availableSeats = 7;  price = 10500; batchType = "Autumn" },
+    { trekSlug = "kuari-pass"; batchDate = "Nov 5, 2026";  totalSeats = 12; bookedSeats = 3; availableSeats = 9;  price = 10500; batchType = "Winter" },
+    { trekSlug = "kuari-pass"; batchDate = "Dec 5, 2026";  totalSeats = 12; bookedSeats = 1; availableSeats = 11; price = 10500; batchType = "Winter" },
+    // Phulara Ridge
+    { trekSlug = "phulara-ridge"; batchDate = "Apr 20, 2026"; totalSeats = 12; bookedSeats = 3; availableSeats = 9;  price = 9200; batchType = "Spring" },
+    { trekSlug = "phulara-ridge"; batchDate = "May 15, 2026"; totalSeats = 12; bookedSeats = 6; availableSeats = 6;  price = 9200; batchType = "Regular" },
+    { trekSlug = "phulara-ridge"; batchDate = "Jun 10, 2026"; totalSeats = 12; bookedSeats = 8; availableSeats = 4;  price = 9200; batchType = "Regular" },
+    { trekSlug = "phulara-ridge"; batchDate = "Sep 15, 2026"; totalSeats = 12; bookedSeats = 5; availableSeats = 7;  price = 9200; batchType = "Autumn" },
+    { trekSlug = "phulara-ridge"; batchDate = "Oct 10, 2026"; totalSeats = 12; bookedSeats = 7; availableSeats = 5;  price = 9200; batchType = "Autumn" },
+    { trekSlug = "phulara-ridge"; batchDate = "Nov 5, 2026";  totalSeats = 12; bookedSeats = 2; availableSeats = 10; price = 9200; batchType = "Regular" },
+    // Kedarnath Yatra
+    { trekSlug = "kedarnath-yatra"; batchDate = "May 5, 2026";  totalSeats = 20; bookedSeats = 12; availableSeats = 8;  price = 7500; batchType = "Opening Season" },
+    { trekSlug = "kedarnath-yatra"; batchDate = "May 15, 2026"; totalSeats = 20; bookedSeats = 18; availableSeats = 2;  price = 7500; batchType = "Regular" },
+    { trekSlug = "kedarnath-yatra"; batchDate = "May 25, 2026"; totalSeats = 20; bookedSeats = 20; availableSeats = 0;  price = 7500; batchType = "Regular" },
+    { trekSlug = "kedarnath-yatra"; batchDate = "Jun 5, 2026";  totalSeats = 20; bookedSeats = 14; availableSeats = 6;  price = 7500; batchType = "Regular" },
+    { trekSlug = "kedarnath-yatra"; batchDate = "Sep 10, 2026"; totalSeats = 20; bookedSeats = 10; availableSeats = 10; price = 7500; batchType = "Autumn" },
+    { trekSlug = "kedarnath-yatra"; batchDate = "Oct 5, 2026";  totalSeats = 20; bookedSeats = 5;  availableSeats = 15; price = 7500; batchType = "Closing Season" },
+    // Do Dham
+    { trekSlug = "do-dham"; batchDate = "May 8, 2026";  totalSeats = 15; bookedSeats = 8;  availableSeats = 7;  price = 18999; batchType = "Regular" },
+    { trekSlug = "do-dham"; batchDate = "May 22, 2026"; totalSeats = 15; bookedSeats = 11; availableSeats = 4;  price = 18999; batchType = "Regular" },
+    { trekSlug = "do-dham"; batchDate = "Jun 5, 2026";  totalSeats = 15; bookedSeats = 6;  availableSeats = 9;  price = 18999; batchType = "Regular" },
+    { trekSlug = "do-dham"; batchDate = "Sep 5, 2026";  totalSeats = 15; bookedSeats = 9;  availableSeats = 6;  price = 18999; batchType = "Autumn" },
+    { trekSlug = "do-dham"; batchDate = "Sep 20, 2026"; totalSeats = 15; bookedSeats = 5;  availableSeats = 10; price = 18999; batchType = "Autumn" },
+    { trekSlug = "do-dham"; batchDate = "Oct 5, 2026";  totalSeats = 15; bookedSeats = 3;  availableSeats = 12; price = 18999; batchType = "Closing" },
+    // Char Dham
+    { trekSlug = "char-dham"; batchDate = "May 10, 2026"; totalSeats = 15; bookedSeats = 10; availableSeats = 5;  price = 32999; batchType = "Opening Batch" },
+    { trekSlug = "char-dham"; batchDate = "May 25, 2026"; totalSeats = 15; bookedSeats = 13; availableSeats = 2;  price = 32999; batchType = "Regular" },
+    { trekSlug = "char-dham"; batchDate = "Jun 8, 2026";  totalSeats = 15; bookedSeats = 7;  availableSeats = 8;  price = 32999; batchType = "Regular" },
+    { trekSlug = "char-dham"; batchDate = "Sep 8, 2026";  totalSeats = 15; bookedSeats = 9;  availableSeats = 6;  price = 32999; batchType = "Autumn" },
+    { trekSlug = "char-dham"; batchDate = "Sep 22, 2026"; totalSeats = 15; bookedSeats = 6;  availableSeats = 9;  price = 32999; batchType = "Autumn" },
+    { trekSlug = "char-dham"; batchDate = "Oct 8, 2026";  totalSeats = 15; bookedSeats = 4;  availableSeats = 11; price = 32999; batchType = "Closing" },
+  ];
+
   // ── Stable state ───────────────────────────────────────────────────────
 
   let treks : List.List<Trek> = List.fromArray(trekSeed);
@@ -449,9 +588,19 @@ actor {
   let gearItems : List.List<GearItem> = List.fromArray(gearSeed);
   let reviews : List.List<Review> = List.fromArray(reviewSeed);
   let packages : List.List<Package> = List.fromArray(packageSeed);
-  let bookings : List.List<Booking> = List.empty<Booking>();
+  // New booking system state (Map-backed for O(log n) lookups)
+  let bookingsMap : Map.Map<Text, Booking> = Map.empty<Text, Booking>();
+  let batchAvailabilityMap : Map.Map<Text, BatchAvailability> = Map.empty<Text, BatchAvailability>();
+  // Legacy list state for backward compat
+  let _bookings : List.List<Booking> = List.empty<Booking>();
   let inquiries : List.List<BookingInquiry> = List.empty<BookingInquiry>();
   let state = { var nextBookingSeq : Nat = 1 };
+
+  // Populate batchAvailabilityMap from seed
+  for (ba in batchAvailabilitySeed.vals()) {
+    let key = ba.trekSlug # "_" # ba.batchDate;
+    batchAvailabilityMap.add(key, ba);
+  };
 
   // ── Query methods ──────────────────────────────────────────────────────
 
@@ -484,11 +633,46 @@ actor {
   };
 
   public query func getBooking(bookingId : Text) : async ?Booking {
-    bookings.find(func(b : Booking) : Bool { b.id == bookingId });
+    bookingsMap.get(bookingId);
   };
 
+  public query func getUserBookings(contactEmail : Text) : async [Booking] {
+    let result = List.empty<Booking>();
+    for ((_, booking) in bookingsMap.entries()) {
+      if (booking.contactEmail == contactEmail) {
+        result.add(booking);
+      };
+    };
+    result.toArray();
+  };
+
+  // Legacy: kept for backward compat
   public query func listUserBookings(userId : Text) : async [Booking] {
-    bookings.filter(func(b : Booking) : Bool { b.userId == userId }).toArray();
+    let result = List.empty<Booking>();
+    for ((_, booking) in bookingsMap.entries()) {
+      if (booking.userId == userId) {
+        result.add(booking);
+      };
+    };
+    result.toArray();
+  };
+
+  public query func getBatchAvailability(trekSlug : Text) : async [BatchAvailability] {
+    let result = List.empty<BatchAvailability>();
+    for ((_, ba) in batchAvailabilityMap.entries()) {
+      if (ba.trekSlug == trekSlug) {
+        result.add(ba);
+      };
+    };
+    result.toArray();
+  };
+
+  public query func getAvailableSeats(trekSlug : Text, batchDate : Text) : async Nat {
+    let key = trekSlug # "_" # batchDate;
+    switch (batchAvailabilityMap.get(key)) {
+      case (?ba) ba.availableSeats;
+      case null 0;
+    };
   };
 
   public query func listYatras() : async [Yatra] {
@@ -548,7 +732,7 @@ actor {
 
   // ── Update methods ─────────────────────────────────────────────────────
 
-  public func createBooking(booking : Booking) : async Text {
+  public func createBooking(input : BookingInput) : async Text {
     let seq = state.nextBookingSeq;
     state.nextBookingSeq += 1;
     let seqStr = if (seq < 10) "0000" # seq.toText()
@@ -556,17 +740,49 @@ actor {
       else if (seq < 1000) "00" # seq.toText()
       else if (seq < 10000) "0" # seq.toText()
       else seq.toText();
-    let prefix = if (booking.trekId == "kedarkantha") "KK"
-      else if (booking.trekId == "chopta-tungnath") "CT"
-      else if (booking.trekId == "har-ki-dun") "HD"
-      else if (booking.trekId == "hampta-pass") "HP"
-      else if (booking.trekId == "sar-pass") "SP"
-      else if (booking.trekId == "kedarnath-yatra") "KY"
-      else if (booking.trekId == "char-dham") "CD"
+    let prefix = if (input.trekSlug == "kedarkantha") "KK"
+      else if (input.trekSlug == "chopta-tungnath") "CT"
+      else if (input.trekSlug == "har-ki-dun") "HD"
+      else if (input.trekSlug == "hampta-pass") "HP"
+      else if (input.trekSlug == "sar-pass") "SP"
+      else if (input.trekSlug == "kuari-pass") "KP"
+      else if (input.trekSlug == "phulara-ridge") "PR"
+      else if (input.trekSlug == "kedarnath-yatra") "KY"
+      else if (input.trekSlug == "do-dham") "DD"
+      else if (input.trekSlug == "char-dham") "CD"
       else "GT";
     let bookingId = "GT-2026-" # prefix # "-" # seqStr;
-    let stored : Booking = { booking with id = bookingId };
-    bookings.add(stored);
+    let contactEmail = if (input.participants.size() > 0) input.participants[0].email else "";
+    let contactPhone = if (input.participants.size() > 0) input.participants[0].mobile else "";
+    let booking : Booking = {
+      id = bookingId;
+      trekSlug = input.trekSlug;
+      batchDate = input.batchDate;
+      participants = input.participants;
+      addOns = input.addOns;
+      totalAmount = input.totalAmount;
+      advanceAmount = input.advanceAmount;
+      paidAmount = input.advanceAmount;
+      paymentType = input.paymentType;
+      promoCode = input.promoCode;
+      status = #Confirmed;
+      createdAt = Time.now();
+      userId = "";
+      contactEmail = contactEmail;
+      contactPhone = contactPhone;
+    };
+    bookingsMap.add(bookingId, booking);
+    // Update batch availability
+    let key = input.trekSlug # "_" # input.batchDate;
+    switch (batchAvailabilityMap.get(key)) {
+      case (?ba) {
+        let numParticipants = input.participants.size();
+        let newBooked = ba.bookedSeats + numParticipants;
+        let newAvail = if (newBooked >= ba.totalSeats) 0 else ba.totalSeats - newBooked;
+        batchAvailabilityMap.add(key, { ba with bookedSeats = newBooked; availableSeats = newAvail });
+      };
+      case null {};
+    };
     bookingId;
   };
 
@@ -582,6 +798,39 @@ actor {
     reviewId;
   };
 
+  public func cancelBooking(bookingId : Text, _reason : Text) : async Bool {
+    switch (bookingsMap.get(bookingId)) {
+      case null false;
+      case (?booking) {
+        bookingsMap.add(bookingId, { booking with status = #Cancelled });
+        // Restore seats
+        let key = booking.trekSlug # "_" # booking.batchDate;
+        switch (batchAvailabilityMap.get(key)) {
+          case (?ba) {
+            let numParticipants = booking.participants.size();
+            let newBooked = if (ba.bookedSeats >= numParticipants) ba.bookedSeats - numParticipants else 0;
+            let newAvail = ba.totalSeats - newBooked;
+            batchAvailabilityMap.add(key, { ba with bookedSeats = newBooked; availableSeats = newAvail });
+          };
+          case null {};
+        };
+        true;
+      };
+    };
+  };
+
+  public func updatePaymentStatus(bookingId : Text, paidAmount : Nat) : async Bool {
+    switch (bookingsMap.get(bookingId)) {
+      case null false;
+      case (?booking) {
+        let newStatus : BookingStatus = if (paidAmount >= booking.totalAmount) #Completed else #Confirmed;
+        bookingsMap.add(bookingId, { booking with paidAmount = paidAmount; status = newStatus });
+        true;
+      };
+    };
+  };
+
+  // Legacy batch availability update for old Batch type
   public func updateBatchAvailability(batchId : Text, seatsBooked : Nat) : async Bool {
     var updated = false;
     batches.mapInPlace(func(b : Batch) : Batch {

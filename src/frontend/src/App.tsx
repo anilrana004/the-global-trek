@@ -1,5 +1,6 @@
 import { Layout } from "@/components/layout/Layout";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BookingProvider } from "@/contexts/BookingProvider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   RouterProvider,
@@ -197,6 +198,11 @@ const certificatesRoute = createRoute({
   path: "/account/certificates",
   component: wrap(CertificatesPage),
 });
+const wishlistRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/account/wishlist",
+  component: wrap(DashboardPage),
+});
 const bookingBatchRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/booking/$trekSlug/select-batch",
@@ -298,6 +304,7 @@ const routeTree = rootRoute.addChildren([
   profileRoute,
   myBookingsRoute,
   certificatesRoute,
+  wishlistRoute,
   bookingBatchRoute,
   bookingParticipantsRoute,
   bookingAddonsRoute,
@@ -333,7 +340,9 @@ const queryClient = new QueryClient({
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <BookingProvider>
+        <RouterProvider router={router} />
+      </BookingProvider>
     </QueryClientProvider>
   );
 }

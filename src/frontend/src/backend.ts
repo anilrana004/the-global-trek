@@ -89,15 +89,17 @@ export class ExternalBlob {
         return this;
     }
 }
-export interface Participant {
-    dateOfBirth: string;
+export interface ParticipantInput {
+    age: bigint;
+    govtIdType: string;
     medicalConditions: string;
-    emergencyContact: string;
-    govtId: string;
     email: string;
     gender: string;
+    emergencyContactPhone: string;
+    emergencyContactName: string;
     mobile: string;
     lastName: string;
+    govtIdNumber: string;
     firstName: string;
 }
 export interface BlogPost {
@@ -108,17 +110,15 @@ export interface BlogPost {
     excerpt: string;
     category: string;
 }
-export interface Yatra {
-    id: string;
-    region: string;
-    duration: string;
-    startEnd: string;
-    difficulty: string;
-    name: string;
-    bestTime: string;
-    description: string;
-    imageQuery: string;
-    price: string;
+export interface BookingInput {
+    participants: Array<ParticipantInput>;
+    promoCode: string;
+    advanceAmount: bigint;
+    totalAmount: bigint;
+    addOns: AddOns;
+    trekSlug: string;
+    paymentType: string;
+    batchDate: string;
 }
 export interface Trek {
     id: string;
@@ -159,16 +159,14 @@ export interface Package {
     price: bigint;
     images: Array<string>;
 }
-export interface Booking {
-    id: string;
-    status: string;
-    participants: Array<Participant>;
-    userId: string;
-    trekId: string;
-    createdAt: bigint;
-    totalAmount: bigint;
-    addOns: Array<string>;
-    batchId: string;
+export interface BatchAvailability {
+    totalSeats: bigint;
+    bookedSeats: bigint;
+    availableSeats: bigint;
+    trekSlug: string;
+    price: bigint;
+    batchDate: string;
+    batchType: string;
 }
 export interface Batch {
     id: string;
@@ -179,6 +177,45 @@ export interface Batch {
     basePrice: bigint;
     batchType: string;
     startDate: string;
+}
+export interface Yatra {
+    id: string;
+    region: string;
+    duration: string;
+    startEnd: string;
+    difficulty: string;
+    name: string;
+    bestTime: string;
+    description: string;
+    imageQuery: string;
+    price: string;
+}
+export interface AddOns {
+    gearTent: boolean;
+    gearBoots: boolean;
+    porterDays: bigint;
+    mule: boolean;
+    muleDays: bigint;
+    gearSleepingBag: boolean;
+    travelInsurance: boolean;
+    porter: boolean;
+}
+export interface Booking {
+    id: string;
+    status: BookingStatus;
+    participants: Array<ParticipantInput>;
+    userId: string;
+    createdAt: bigint;
+    promoCode: string;
+    advanceAmount: bigint;
+    totalAmount: bigint;
+    addOns: AddOns;
+    trekSlug: string;
+    contactEmail: string;
+    paymentType: string;
+    paidAmount: bigint;
+    batchDate: string;
+    contactPhone: string;
 }
 export interface Review {
     id: string;
@@ -201,12 +238,22 @@ export interface GearItem {
     category: string;
     brand: string;
 }
+export enum BookingStatus {
+    Confirmed = "Confirmed",
+    Cancelled = "Cancelled",
+    Completed = "Completed",
+    Pending = "Pending"
+}
 export interface backendInterface {
-    createBooking(booking: Booking): Promise<string>;
+    cancelBooking(bookingId: string, _reason: string): Promise<boolean>;
+    createBooking(input: BookingInput): Promise<string>;
     createReview(review: Review): Promise<string>;
+    getAvailableSeats(trekSlug: string, batchDate: string): Promise<bigint>;
+    getBatchAvailability(trekSlug: string): Promise<Array<BatchAvailability>>;
     getBooking(bookingId: string): Promise<Booking | null>;
     getPackageById(packageId: string): Promise<Package | null>;
     getTrek(id: string): Promise<Trek | null>;
+    getUserBookings(contactEmail: string): Promise<Array<Booking>>;
     getYatra(yatraId: string): Promise<Yatra | null>;
     listAllReviews(): Promise<Array<Review>>;
     listBatches(trekId: string): Promise<Array<Batch>>;
@@ -220,11 +267,26 @@ export interface backendInterface {
     searchTreks(searchTerm: string): Promise<Array<Trek>>;
     submitBookingInquiry(inquiry: BookingInquiry): Promise<string>;
     updateBatchAvailability(batchId: string, seatsBooked: bigint): Promise<boolean>;
+    updatePaymentStatus(bookingId: string, paidAmount: bigint): Promise<boolean>;
 }
-import type { Booking as _Booking, Package as _Package, Trek as _Trek, Yatra as _Yatra } from "./declarations/backend.did.d.ts";
+import type { AddOns as _AddOns, Booking as _Booking, BookingStatus as _BookingStatus, Package as _Package, ParticipantInput as _ParticipantInput, Trek as _Trek, Yatra as _Yatra } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
-    async createBooking(arg0: Booking): Promise<string> {
+    async cancelBooking(arg0: string, arg1: string): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.cancelBooking(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.cancelBooking(arg0, arg1);
+            return result;
+        }
+    }
+    async createBooking(arg0: BookingInput): Promise<string> {
         if (this.processError) {
             try {
                 const result = await this.actor.createBooking(arg0);
@@ -252,6 +314,34 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getAvailableSeats(arg0: string, arg1: string): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAvailableSeats(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAvailableSeats(arg0, arg1);
+            return result;
+        }
+    }
+    async getBatchAvailability(arg0: string): Promise<Array<BatchAvailability>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getBatchAvailability(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getBatchAvailability(arg0);
+            return result;
+        }
+    }
     async getBooking(arg0: string): Promise<Booking | null> {
         if (this.processError) {
             try {
@@ -270,42 +360,56 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getPackageById(arg0);
-                return from_candid_opt_n2(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n6(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getPackageById(arg0);
-            return from_candid_opt_n2(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n6(this._uploadFile, this._downloadFile, result);
         }
     }
     async getTrek(arg0: string): Promise<Trek | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getTrek(arg0);
-                return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n7(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getTrek(arg0);
-            return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n7(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getUserBookings(arg0: string): Promise<Array<Booking>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getUserBookings(arg0);
+                return from_candid_vec_n8(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getUserBookings(arg0);
+            return from_candid_vec_n8(this._uploadFile, this._downloadFile, result);
         }
     }
     async getYatra(arg0: string): Promise<Yatra | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getYatra(arg0);
-                return from_candid_opt_n4(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n9(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getYatra(arg0);
-            return from_candid_opt_n4(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n9(this._uploadFile, this._downloadFile, result);
         }
     }
     async listAllReviews(): Promise<Array<Review>> {
@@ -410,14 +514,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.listUserBookings(arg0);
-                return result;
+                return from_candid_vec_n8(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.listUserBookings(arg0);
-            return result;
+            return from_candid_vec_n8(this._uploadFile, this._downloadFile, result);
         }
     }
     async listYatras(): Promise<Array<Yatra>> {
@@ -476,18 +580,103 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async updatePaymentStatus(arg0: string, arg1: bigint): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updatePaymentStatus(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updatePaymentStatus(arg0, arg1);
+            return result;
+        }
+    }
+}
+function from_candid_BookingStatus_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _BookingStatus): BookingStatus {
+    return from_candid_variant_n5(_uploadFile, _downloadFile, value);
+}
+function from_candid_Booking_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Booking): Booking {
+    return from_candid_record_n3(_uploadFile, _downloadFile, value);
 }
 function from_candid_opt_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Booking]): Booking | null {
+    return value.length === 0 ? null : from_candid_Booking_n2(_uploadFile, _downloadFile, value[0]);
+}
+function from_candid_opt_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Package]): Package | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Package]): Package | null {
+function from_candid_opt_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Trek]): Trek | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Trek]): Trek | null {
+function from_candid_opt_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Yatra]): Yatra | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Yatra]): Yatra | null {
-    return value.length === 0 ? null : value[0];
+function from_candid_record_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    id: string;
+    status: _BookingStatus;
+    participants: Array<_ParticipantInput>;
+    userId: string;
+    createdAt: bigint;
+    promoCode: string;
+    advanceAmount: bigint;
+    totalAmount: bigint;
+    addOns: _AddOns;
+    trekSlug: string;
+    contactEmail: string;
+    paymentType: string;
+    paidAmount: bigint;
+    batchDate: string;
+    contactPhone: string;
+}): {
+    id: string;
+    status: BookingStatus;
+    participants: Array<ParticipantInput>;
+    userId: string;
+    createdAt: bigint;
+    promoCode: string;
+    advanceAmount: bigint;
+    totalAmount: bigint;
+    addOns: AddOns;
+    trekSlug: string;
+    contactEmail: string;
+    paymentType: string;
+    paidAmount: bigint;
+    batchDate: string;
+    contactPhone: string;
+} {
+    return {
+        id: value.id,
+        status: from_candid_BookingStatus_n4(_uploadFile, _downloadFile, value.status),
+        participants: value.participants,
+        userId: value.userId,
+        createdAt: value.createdAt,
+        promoCode: value.promoCode,
+        advanceAmount: value.advanceAmount,
+        totalAmount: value.totalAmount,
+        addOns: value.addOns,
+        trekSlug: value.trekSlug,
+        contactEmail: value.contactEmail,
+        paymentType: value.paymentType,
+        paidAmount: value.paidAmount,
+        batchDate: value.batchDate,
+        contactPhone: value.contactPhone
+    };
+}
+function from_candid_variant_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    Confirmed: null;
+} | {
+    Cancelled: null;
+} | {
+    Completed: null;
+} | {
+    Pending: null;
+}): BookingStatus {
+    return "Confirmed" in value ? BookingStatus.Confirmed : "Cancelled" in value ? BookingStatus.Cancelled : "Completed" in value ? BookingStatus.Completed : "Pending" in value ? BookingStatus.Pending : value;
+}
+function from_candid_vec_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Booking>): Array<Booking> {
+    return value.map((x)=>from_candid_Booking_n2(_uploadFile, _downloadFile, x));
 }
 export interface CreateActorOptions {
     agent?: Agent;

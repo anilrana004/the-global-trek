@@ -24,6 +24,45 @@ const himachalTreks = [
   { label: "Beas Kund", slug: "beas-kund" },
 ];
 
+const featuredTreks = [
+  {
+    label: "Kedarkantha",
+    slug: "kedarkantha",
+    price: "\u20b98,500",
+    state: "uttarakhand",
+  },
+  {
+    label: "Chopta Tungnath",
+    slug: "chopta-tungnath",
+    price: "\u20b97,200",
+    state: "uttarakhand",
+  },
+  {
+    label: "Har Ki Dun",
+    slug: "har-ki-dun",
+    price: "\u20b99,500",
+    state: "uttarakhand",
+  },
+  {
+    label: "Hampta Pass",
+    slug: "hampta-pass",
+    price: "\u20b911,500",
+    state: "himachal-pradesh",
+  },
+  {
+    label: "Sar Pass",
+    slug: "sar-pass",
+    price: "\u20b99,800",
+    state: "himachal-pradesh",
+  },
+  {
+    label: "Roopkund",
+    slug: "roopkund",
+    price: "\u20b914,500",
+    state: "uttarakhand",
+  },
+];
+
 const yatraPackages = [
   { label: "Kedarnath Yatra", to: "/yatra/kedarnath" },
   { label: "Do Dham Yatra", to: "/yatra/do-dham" },
@@ -49,8 +88,11 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const megaRef = useRef<HTMLDivElement>(null);
   const megaTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);
@@ -58,6 +100,26 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    if (searchOpen) {
+      setTimeout(() => searchInputRef.current?.focus(), 50);
+    }
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSearchOpen(false);
+    };
+    if (searchOpen) window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [searchOpen]);
+
+  const allTreks = [
+    ...uttarakhandTreks.map((t) => ({ ...t, state: "uttarakhand" })),
+    ...himachalTreks.map((t) => ({ ...t, state: "himachal-pradesh" })),
+  ];
+  const filteredResults = searchQuery.trim()
+    ? allTreks.filter((t) =>
+        t.label.toLowerCase().includes(searchQuery.toLowerCase()),
+      )
+    : featuredTreks;
   const openMega = () => {
     if (megaTimerRef.current) clearTimeout(megaTimerRef.current);
     setMegaOpen(true);
@@ -68,6 +130,112 @@ export function Navbar() {
 
   return (
     <>
+      {/* Search overlay */}
+      {searchOpen && (
+        <section
+          className="fixed inset-0 z-50 flex items-start justify-center pt-24 px-4"
+          style={{
+            background: "rgba(10,46,26,0.96)",
+            backdropFilter: "blur(8px)",
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSearchOpen(false);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setSearchOpen(false);
+          }}
+          aria-label="Trek search overlay"
+          data-ocid="navbar.search_overlay"
+        >
+          <div className="w-full max-w-2xl">
+            <div
+              className="flex items-center gap-3 px-5 py-4 rounded-2xl"
+              style={{
+                background: "rgba(255,255,255,0.08)",
+                border: "1.5px solid rgba(255,255,255,0.2)",
+              }}
+            >
+              <Search className="w-5 h-5 text-white/60 shrink-0" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search treks, yatras, packages..."
+                className="flex-1 bg-transparent text-white placeholder:text-white/40 text-base outline-none"
+                aria-label="Search treks"
+                data-ocid="navbar.search_input"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchOpen(false);
+                  setSearchQuery("");
+                }}
+                aria-label="Close search"
+              >
+                <X className="w-5 h-5 text-white/60 hover:text-white" />
+              </button>
+            </div>
+            {filteredResults.length > 0 && (
+              <div
+                className="mt-3 rounded-2xl overflow-hidden"
+                style={{
+                  background: "rgba(20,92,56,0.97)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                }}
+              >
+                <p
+                  className="px-5 pt-3 pb-1 text-[10px] font-label tracking-widest uppercase"
+                  style={{ color: "rgba(255,255,255,0.4)" }}
+                >
+                  {searchQuery ? "Results" : "Featured Treks"}
+                </p>
+                {filteredResults.map((t) => (
+                  <Link
+                    key={t.slug}
+                    to="/treks/$state/$slug"
+                    params={{ state: t.state, slug: t.slug }}
+                    className="flex items-center gap-3 px-5 py-3 hover:bg-white/10 transition-colors border-t"
+                    style={{ borderColor: "rgba(255,255,255,0.07)" }}
+                    onClick={() => {
+                      setSearchOpen(false);
+                      setSearchQuery("");
+                    }}
+                    data-ocid="navbar.search_result"
+                  >
+                    <Mountain
+                      className="w-4 h-4 shrink-0"
+                      style={{ color: "#2ECC71" }}
+                    />
+                    <span className="text-white text-sm flex-1">{t.label}</span>
+                    {"price" in t && (
+                      <span
+                        className="text-xs font-bold"
+                        style={{ color: "#F4A623" }}
+                      >
+                        {(t as { price: string }).price}
+                      </span>
+                    )}
+                    <span
+                      className="text-xs"
+                      style={{ color: "rgba(255,255,255,0.3)" }}
+                    >
+                      {t.state === "uttarakhand" ? "Uttarakhand" : "Himachal"}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            )}
+            <p
+              className="mt-3 text-center text-xs"
+              style={{ color: "rgba(255,255,255,0.3)" }}
+            >
+              Press Escape to close
+            </p>
+          </div>
+        </section>
+      )}
       {/* Main navbar */}
       <nav
         className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
@@ -231,10 +399,11 @@ export function Navbar() {
               className="text-white/70 hover:text-white transition-colors p-2"
               aria-label="Search"
               data-ocid="navbar.search_button"
+              onClick={() => setSearchOpen(true)}
             >
               <Search className="w-5 h-5" />
             </button>
-            <Link to="/contact">
+            <Link to="/explore">
               <Button
                 size="sm"
                 className="font-label text-xs font-bold tracking-widest uppercase rounded-full px-5"

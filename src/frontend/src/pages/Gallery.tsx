@@ -587,6 +587,12 @@ export default function GalleryPage() {
                   el.style.zIndex = "auto";
                 }}
                 onClick={() => openLightbox(idx)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    openLightbox(idx);
+                  }
+                }}
                 data-ocid={`gallery.item.${idx + 1}`}
                 tabIndex={0}
                 aria-label={`View photo: ${item.alt}`}
